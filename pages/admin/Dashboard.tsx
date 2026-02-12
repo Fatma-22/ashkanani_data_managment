@@ -69,6 +69,8 @@ export const Dashboard: React.FC = () => {
   };
 
   const COLORS = ['#1e40af', '#059669', '#f59e0b', '#dc2626', '#8b5cf6'];
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   if (loading) {
     return (
@@ -77,9 +79,6 @@ export const Dashboard: React.FC = () => {
       </div>
     );
   }
-
-  const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
 
   return (
     <div className="fade-in pb-8">

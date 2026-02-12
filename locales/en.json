@@ -175,7 +175,16 @@
             "download_doc": "Download",
             "view_doc": "View Document",
             "no_contracts": "No contract information available for this player",
-            "contract_doc_title": "Contract Document"
+            "contract_doc_title": "Contract Document",
+            "start_year": "Contract Start Year",
+            "duration": "Contract Duration",
+            "duration_1yr": "1 Year",
+            "duration_plus": "More than 1 Year",
+            "remaining_time": "Remaining Duration",
+            "remaining_6m": "6 Months or less",
+            "remaining_1y": "1 Year or less",
+            "remaining_2y": "2 Years or less",
+            "remaining_plus": "More than 2 Years"
         }
     },
     "players": {

@@ -180,6 +180,9 @@ export const MainLayout: React.FC = () => {
           <Outlet />
         </Content>
         <Footer className="text-center py-4 bg-gray-50 text-gray-400 border-t border-gray-100">
+          <div className="mb-1">
+            <strong className="text-slate-600 text-xs">{t('login.title')}</strong>
+          </div>
           <Text className="text-xs opacity-60 tracking-widest">{t('common.footer_text')}</Text>
         </Footer>
       </Layout>

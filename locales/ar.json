@@ -175,7 +175,16 @@
             "download_doc": "تحميل الملف",
             "view_doc": "عرض المستند",
             "no_contracts": "لا توجد معلومات عقد متاحة لهذا اللاعب",
-            "contract_doc_title": "مستند العقد"
+            "contract_doc_title": "مستند العقد",
+            "start_year": "سنة بداية العقد",
+            "duration": "مدة التعاقد",
+            "duration_1yr": "سنة واحدة",
+            "duration_plus": "أكثر من سنة",
+            "remaining_time": "الفترة المتبقية",
+            "remaining_6m": "٦ أشهر وأقل",
+            "remaining_1y": "سنة أو أقل",
+            "remaining_2y": "سنتين أو أقل",
+            "remaining_plus": "أكثر من سنتين"
         }
     },
     "players": {

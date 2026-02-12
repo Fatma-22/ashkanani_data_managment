@@ -238,13 +238,47 @@ export const SearchFilters: FC<SearchFiltersProps> = ({ filters, onChange, avail
                                             </Select>
                                             <Select
                                                 mode="multiple"
+                                                placeholder={t('admin.contracts.start_year')}
+                                                className="w-full custom-select mb-2"
+                                                value={filters.contractStartYear}
+                                                onChange={(v) => onChange({ ...filters, contractStartYear: v })}
+                                                allowClear
+                                            >
+                                                {[2020, 2021, 2022, 2023, 2024, 2025].map(y => <Option key={y} value={y}>{y}</Option>)}
+                                            </Select>
+                                            <Select
+                                                mode="multiple"
                                                 placeholder={t('admin.contracts.expiry_years')}
-                                                className="w-full custom-select"
+                                                className="w-full custom-select mb-2"
                                                 value={filters.contractExpiryYear}
                                                 onChange={(v) => onChange({ ...filters, contractExpiryYear: v })}
                                                 allowClear
                                             >
                                                 {[2024, 2025, 2026, 2027, 2028].map(y => <Option key={y} value={y}>{y}</Option>)}
+                                            </Select>
+                                            <Select
+                                                mode="multiple"
+                                                placeholder={t('admin.contracts.duration')}
+                                                className="w-full custom-select mb-2"
+                                                value={filters.contractDuration}
+                                                onChange={(v) => onChange({ ...filters, contractDuration: v })}
+                                                allowClear
+                                            >
+                                                <Option value="1year">{t('admin.contracts.duration_1yr')}</Option>
+                                                <Option value="moreThan1year">{t('admin.contracts.duration_plus')}</Option>
+                                            </Select>
+                                            <Select
+                                                mode="multiple"
+                                                placeholder={t('admin.contracts.remaining_time')}
+                                                className="w-full custom-select"
+                                                value={filters.remainingDuration}
+                                                onChange={(v) => onChange({ ...filters, remainingDuration: v })}
+                                                allowClear
+                                            >
+                                                <Option value="6months">{t('admin.contracts.remaining_6m')}</Option>
+                                                <Option value="1year">{t('admin.contracts.remaining_1y')}</Option>
+                                                <Option value="2years">{t('admin.contracts.remaining_2y')}</Option>
+                                                <Option value="moreThan2years">{t('admin.contracts.remaining_plus')}</Option>
                                             </Select>
                                         </Space>
                                     </Col>

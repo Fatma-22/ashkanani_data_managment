@@ -48,7 +48,7 @@ export const PublicLayout: React.FC = () => {
       </Content>
       <Footer className="text-center bg-slate-50 text-slate-400 py-12 border-t border-slate-100">
         <div style={{ marginBottom: 8 }}>
-          <strong className="text-slate-600">Ashkanani Sport</strong> <span className="text-gold-500 mx-2">|</span> {t('admin.reports.subtitle')}
+          <strong className="text-slate-600">{t('login.title')}</strong> <span className="text-gold-500 mx-2">|</span> {t('admin.reports.subtitle')}
         </div>
         <div style={{ fontSize: 12 }} className="uppercase tracking-widest opacity-60">
           {t('common.footer_text')}

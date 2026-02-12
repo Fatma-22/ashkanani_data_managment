@@ -66,6 +66,8 @@ export const filterPlayers = (players: Player[], filters: PlayerFilters, contrac
         // Contract Filters
         if ((filters.contractExpiryYear && filters.contractExpiryYear.length > 0) ||
             (filters.contractStartYear && filters.contractStartYear.length > 0) ||
+            (filters.contractDuration && filters.contractDuration.length > 0) ||
+            (filters.remainingDuration && filters.remainingDuration.length > 0) ||
             (filters.contractType && filters.contractType.length > 0)) {
 
             const playerContract = contracts.find(c => c.playerId === player.id);
@@ -79,6 +81,30 @@ export const filterPlayers = (players: Player[], filters: PlayerFilters, contrac
             if (filters.contractStartYear && filters.contractStartYear.length > 0) {
                 const startYear = dayjs(playerContract.startDate).year();
                 if (!filters.contractStartYear.includes(startYear)) return false;
+            }
+
+            if (filters.contractDuration && filters.contractDuration.length > 0) {
+                const durationYears = dayjs(playerContract.endDate).diff(dayjs(playerContract.startDate), 'year', true);
+                const results = filters.contractDuration.map(d => {
+                    if (d === '1year') return durationYears <= 1.1;
+                    if (d === 'moreThan1year') return durationYears > 1.1;
+                    return false;
+                });
+                if (!results.some(r => r)) return false;
+            }
+
+            if (filters.remainingDuration && filters.remainingDuration.length > 0) {
+                const now = dayjs();
+                const remainingYears = dayjs(playerContract.endDate).diff(now, 'year', true);
+                const remainingMonths = dayjs(playerContract.endDate).diff(now, 'month', true);
+                const results = filters.remainingDuration.map(d => {
+                    if (d === '6months') return remainingMonths <= 6 && remainingMonths >= 0;
+                    if (d === '1year') return remainingYears <= 1 && remainingMonths >= 0;
+                    if (d === '2years') return remainingYears <= 2 && remainingMonths >= 0;
+                    if (d === 'moreThan2years') return remainingYears > 2;
+                    return false;
+                });
+                if (!results.some(r => r)) return false;
             }
 
             if (filters.contractType && filters.contractType.length > 0) {

@@ -209,6 +209,8 @@ export interface PlayerFilters {
   preferredFoot?: PreferredFoot[];
   contractExpiryYear?: number[];
   contractStartYear?: number[];
+  contractDuration?: ('1year' | 'moreThan1year')[];
+  remainingDuration?: ('6months' | '1year' | '2years' | 'moreThan2years')[];
   contractType?: ('Professional' | 'Youth' | 'Loan')[];
   agentId?: string;
 }
