@@ -86,6 +86,32 @@ export const MainLayout: React.FC = () => {
     ]} />
   );
 
+  const sidebarContent = (
+    <>
+      <div className="h-16 flex items-center px-4 gap-2 bg-[#01153e] z-20">
+        <div className="flex-shrink-0">
+          <img src="/logo.png" alt="Logo" style={{ height: 32, width: 'auto', display: 'block' }} />
+        </div>
+        {(!collapsed || isMobile) && (
+          <div className="text-white font-black leading-none whitespace-nowrap overflow-hidden" style={{ fontSize: '15px', letterSpacing: '-0.4px' }}>
+            {t('login.title_part1', { defaultValue: 'ASHKANANI' })}<span style={{ color: '#FFD700' }}> {t('login.title_part2', { defaultValue: 'SPORT' })}</span>
+          </div>
+        )}
+      </div>
+      <Menu
+        theme="dark"
+        mode="inline"
+        selectedKeys={[location.pathname]}
+        items={menuItems}
+        onClick={({ key }) => {
+          navigate(key);
+          if (isMobile) setDrawerVisible(false);
+        }}
+        className="bg-[#01153e] border-none"
+      />
+    </>
+  );
+
   return (
     <Layout className="min-h-screen">
       {!isMobile && (

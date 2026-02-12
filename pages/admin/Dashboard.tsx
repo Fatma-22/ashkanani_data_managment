@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Statistic, Space, Typography, Spin, Select } from 'antd';
+import { Row, Col, Card, Statistic, Space, Typography, Spin, Select, Grid } from 'antd';
 import {
   UserOutlined,
   FileTextOutlined,
@@ -78,10 +78,13 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+
   return (
     <div className="fade-in pb-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <Title level={2} style={{ margin: 0 }}>{t('admin.dashboard.title')}</Title>
+        <Title level={isMobile ? 3 : 2} style={{ margin: 0 }}>{t('admin.dashboard.title')}</Title>
         <div className="w-full md:w-64">
           <Text strong className="block mb-2 text-slate-400 uppercase text-[10px] tracking-widest">
             {t('common.sport')}
@@ -165,8 +168,8 @@ export const Dashboard: React.FC = () => {
                     nameKey="range"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
-                    label={(entry) => i18n.language === 'ar' ? `${entry.count} :${entry.range}` : `${entry.range}: ${entry.count}`}
+                    outerRadius={screens.xs ? 80 : 100}
+                    label={screens.xs ? false : (entry) => i18n.language === 'ar' ? `${entry.count} :${entry.range}` : `${entry.range}: ${entry.count}`}
                   >
                     {marketValueDist.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -248,6 +251,6 @@ export const Dashboard: React.FC = () => {
           </Col>
         </Row>
       </Space>
-    </div>
+    </div >
   );
 };

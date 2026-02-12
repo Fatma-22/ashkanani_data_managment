@@ -16,6 +16,7 @@ import {
   Card,
   Select,
   Upload,
+  Grid,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextOutlined, UploadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -38,6 +39,8 @@ export const Contracts: FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [form] = Form.useForm();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const [searchText, setSearchText] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | undefined>();
@@ -245,11 +248,11 @@ export const Contracts: FC = () => {
 
   return (
     <div className="fade-in">
-      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-        <Col>
-          <Title level={2} style={{ margin: 0, color: '#01153e' }}>{t('admin.contracts.title')}</Title>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }} gutter={[16, 16]}>
+        <Col xs={24} md={12}>
+          <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#01153e' }}>{t('admin.contracts.title')}</Title>
         </Col>
-        <Col>
+        <Col xs={24} md={12} className="text-left md:text-right">
           <Button
             type="primary"
             icon={<PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
@@ -333,6 +336,7 @@ export const Contracts: FC = () => {
             dataSource={filteredContracts}
             loading={loading}
             rowKey="id"
+            scroll={{ x: 1000 }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,

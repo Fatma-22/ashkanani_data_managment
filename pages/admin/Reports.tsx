@@ -12,6 +12,7 @@ import {
     Divider,
     Tag,
     Select,
+    Grid,
 } from 'antd';
 import {
     BarChart,
@@ -62,6 +63,8 @@ export const Reports: FC = () => {
     const [positionData, setPositionData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedSport, setSelectedSport] = useState<Sport | 'All'>('All');
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
 
     useEffect(() => {
         loadData();
@@ -140,16 +143,16 @@ export const Reports: FC = () => {
         <div className="fade-in pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <Title level={2} style={{ margin: 0, color: '#01153e' }}>{t('common.reports')}</Title>
-                    <Text type="secondary">{t('admin.reports.subtitle')}</Text>
+                    <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#01153e' }}>{t('common.reports')}</Title>
+                    <Text type="secondary" className="text-sm">{t('admin.reports.subtitle')}</Text>
                 </div>
-                <Space wrap size="middle">
-                    <div className="flex flex-col">
+                <Space wrap size="middle" className="w-full md:w-auto">
+                    <div className="flex flex-col w-full md:w-48">
                         <Text strong className="text-slate-400 uppercase text-[10px] tracking-widest mb-1">
                             {t('common.sport')}
                         </Text>
                         <Select
-                            className="w-48 custom-select"
+                            className="w-full custom-select"
                             value={selectedSport}
                             onChange={setSelectedSport}
                         >
@@ -159,24 +162,22 @@ export const Reports: FC = () => {
                             ))}
                         </Select>
                     </div>
-                    <div className="flex items-end h-full pt-5">
-                        <Space>
-                            <Button
-                                icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                                onClick={() => handleExport('PDF')}
-                                className="rounded-lg h-10 border-[#01153e] text-[#01153e]"
-                            >
-                                {t('admin.reports.export_pdf')}
-                            </Button>
-                            <Button
-                                type="primary"
-                                icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                                onClick={() => handleExport('Excel')}
-                                className="bg-[#01153e] hover:bg-[#022569] border-none shadow-md h-10 px-6 rounded-lg font-bold"
-                            >
-                                {t('admin.reports.export_excel')}
-                            </Button>
-                        </Space>
+                    <div className="flex items-end gap-2 w-full md:w-auto">
+                        <Button
+                            icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                            onClick={() => handleExport('PDF')}
+                            className="flex-1 md:flex-none rounded-lg h-10 border-[#01153e] text-[#01153e]"
+                        >
+                            {t('admin.reports.export_pdf')}
+                        </Button>
+                        <Button
+                            type="primary"
+                            icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                            onClick={() => handleExport('Excel')}
+                            className="flex-1 md:flex-none bg-[#01153e] hover:bg-[#022569] border-none shadow-md h-10 px-6 rounded-lg font-bold"
+                        >
+                            {t('admin.reports.export_excel')}
+                        </Button>
                     </div>
                 </Space>
             </div>
@@ -273,8 +274,8 @@ export const Reports: FC = () => {
                                         data={positionData}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={100}
+                                        innerRadius={screens.xs ? 40 : 60}
+                                        outerRadius={screens.xs ? 70 : 100}
                                         paddingAngle={5}
                                         dataKey="value"
                                     >

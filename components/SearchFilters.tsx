@@ -69,7 +69,7 @@ export const SearchFilters: FC<SearchFiltersProps> = ({ filters, onChange, avail
                     <Col xs={24} lg={expanded ? 18 : 20}>
                         <Input
                             size="large"
-                            className="bg-white border-none shadow-sm h-14 text-lg rounded-xl px-4 md:px-6 focus:ring-2 focus:ring-[#01153e] hover:shadow-md transition-all"
+                            className="bg-white border-none shadow-sm h-12 md:h-14 text-base md:text-lg rounded-xl px-4 md:px-6 focus:ring-2 focus:ring-[#01153e] hover:shadow-md transition-all"
                             style={{ border: '1px solid #f0f0f0' }}
                             placeholder={t('common.search_players')}
                             prefix={<SearchOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-slate-300 mr-2" />}
@@ -87,7 +87,7 @@ export const SearchFilters: FC<SearchFiltersProps> = ({ filters, onChange, avail
                                             size="large"
                                             icon={<FilterOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                                             onClick={() => setExpanded(!expanded)}
-                                            className={`h-14 px-6 rounded-xl border-0 shadow-sm transition-all w-full ${expanded ? 'bg-[#01153e] text-white shadow-lg' : 'bg-white text-navy-500 font-bold hover:bg-slate-50'}`}
+                                            className={`h-12 md:h-14 px-6 rounded-xl border-0 shadow-sm transition-all w-full ${expanded ? 'bg-[#01153e] text-white shadow-lg' : 'bg-white text-navy-500 font-bold hover:bg-slate-50'}`}
                                             title={expanded ? t('common.hide') : t('common.search')}
                                         >
                                             {expanded ? t('common.hide') : t('common.search')}
@@ -95,13 +95,13 @@ export const SearchFilters: FC<SearchFiltersProps> = ({ filters, onChange, avail
                                     </Badge>
                                 </Col>
                                 {activeCount > 0 && (
-                                    <Col>
+                                    <Col flex="initial">
                                         <Button
                                             size="large"
                                             type="text"
                                             icon={<CloseOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                                             onClick={handleClearFilters}
-                                            className="h-14 px-6 flex items-center justify-center rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 transition-all font-bold"
+                                            className="h-12 md:h-14 px-4 md:px-6 flex items-center justify-center rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50 transition-all font-bold"
                                         >
                                             {t('common.cancel')}
                                         </Button>

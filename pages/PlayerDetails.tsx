@@ -395,4 +395,14 @@ export const PlayerDetails: FC = () => {
                                         <div className="mt-1">
                                             <DoubleRightOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-gold-500 group-hover:translate-x-1 transition-transform" />
                                         </div>
-                                        <Text className="text-base text-gray
+                                        <Text className="text-base text-gray-700">{ach}</Text>
+                                    </li>
+                                ))}
+                            </ul>
+                        </Card>
+                    )}
+                </Col>
+            </Row>
+        </div >
+    );
+};

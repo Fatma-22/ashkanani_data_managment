@@ -17,6 +17,7 @@ import {
     Tag,
     Tooltip,
     Divider,
+    Grid,
 } from 'antd';
 import {
     PlusOutlined,
@@ -46,6 +47,8 @@ export const Agents: FC = () => {
     const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
     const [searchText, setSearchText] = useState('');
     const [form] = Form.useForm();
+    const screens = Grid.useBreakpoint();
+    const isMobile = !screens.md;
 
     useEffect(() => {
         loadData();
@@ -211,10 +214,10 @@ export const Agents: FC = () => {
     return (
         <div className="fade-in">
             <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-                <Col>
-                    <Title level={2} style={{ margin: 0, color: '#01153e' }}>{t('admin.agents.title')}</Title>
+                <Col xs={24} md={12}>
+                    <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#01153e' }}>{t('admin.agents.title')}</Title>
                 </Col>
-                <Col>
+                <Col xs={24} md={12} className="text-left md:text-right mt-4 md:mt-0">
                     <Button
                         type="primary"
                         icon={<PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
@@ -251,6 +254,7 @@ export const Agents: FC = () => {
                         dataSource={filteredAgents}
                         loading={loading}
                         rowKey="id"
+                        scroll={{ x: 800 }}
                         pagination={{
                             pageSize: 10,
                             showSizeChanger: true,
