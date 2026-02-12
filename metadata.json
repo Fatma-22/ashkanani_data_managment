@@ -1,0 +1,5 @@
+{
+  "name": "SportsPro CMS",
+  "description": "A comprehensive sports data management system for admins, agents, and public users featuring player tracking, contract management, and analytics.",
+  "requestFramePermissions": []
+}
