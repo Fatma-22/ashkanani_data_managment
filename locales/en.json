@@ -61,12 +61,13 @@
         "role": "Role",
         "player": "Player",
         "coach": "Coach",
-        "agent": "Agent"
-        ,
+        "agent": "Agent",
         "password": "Password",
         "yes": "Yes",
         "no": "No",
-        "inactive": "Inactive"
+        "inactive": "Inactive",
+        "close": "Close",
+        "name_ar": "Name (Arabic)"
     },
     "enums": {
         "Position": {
@@ -89,10 +90,31 @@
         "Sport": {
             "Football": "Football",
             "Basketball": "Basketball",
+            "Volleyball": "Volleyball",
+            "Handball": "Handball",
+            "Futsal": "Futsal",
+            "Water Polo": "Water Polo",
             "Tennis": "Tennis",
             "Padel": "Padel",
+            "Squash": "Squash",
+            "Table Tennis": "Table Tennis",
+            "Badminton": "Badminton",
+            "Boxing": "Boxing",
+            "Judo": "Judo",
+            "Karate": "Karate",
+            "Taekwondo": "Taekwondo",
+            "Wrestling": "Wrestling",
+            "Fencing": "Fencing",
             "Swimming": "Swimming",
-            "Volleyball": "Volleyball"
+            "Diving": "Diving",
+            "Rowing": "Rowing",
+            "Athletics": "Athletics",
+            "Gymnastics": "Gymnastics",
+            "Shooting": "Shooting",
+            "Archery": "Archery",
+            "Equestrian": "Equestrian",
+            "Cycling": "Cycling",
+            "Weightlifting": "Weightlifting"
         },
         "ContractStatus": {
             "Active": "Active",
@@ -312,7 +334,8 @@
         "update_success": "Profile updated successfully!",
         "update_failed": "Failed to update profile",
         "full_name_placeholder": "Enter your full name",
-        "email_disabled": "Email cannot be changed"
+        "email_disabled": "Email cannot be changed",
+        "email_placeholder": "Enter email address"
     },
     "owner": {
         "dashboard": {
@@ -365,10 +388,10 @@
         "financials": {
             "title": "Financial Management",
             "subtitle": "Track income, expenses, and financial performance",
-                "total_income": "Total Income",
-                "total_expense": "Total Expense",
-                "net_profit": "Net Profit",
-                "monthly_profit": "Monthly Profit",
+            "total_income": "Total Income",
+            "total_expense": "Total Expense",
+            "net_profit": "Net Profit",
+            "monthly_profit": "Monthly Profit",
             "records_title": "Financial Records",
             "add_record": "Add Record",
             "edit_record": "Edit Record",
@@ -393,7 +416,7 @@
             "amount_placeholder": "Enter amount",
             "currency_placeholder": "Select currency",
             "description_placeholder": "Enter description",
-            "related_to_placeholder": "Player/Agent ID",
+            "related_to_placeholder": "Player or Coach Name",
             "select_type": "Select type",
             "income_expense_chart": "Income vs Expense Chart",
             "category_breakdown": "Category Breakdown",
@@ -433,7 +456,26 @@
             "active_employees": "Active Employees",
             "total_salary": "Total Salary",
             "avg_salary": "Average Salary",
-            "employees_title": "Employees"
+            "employees_title": "Employees",
+            "view_details": "View Details",
+            "employee_details": "Employee Details",
+            "personal_info": "Personal Information",
+            "contact_info": "Contact Information",
+            "job_info": "Job Information",
+            "hire_date": "Hire Date",
+            "national_id": "National ID",
+            "address": "Address",
+            "email": "Email",
+            "phone": "Phone",
+            "salary": "Salary",
+            "actions": "Actions",
+            "status": "Status",
+            "name": "Name",
+            "position": "Position",
+            "department": "Department",
+            "position_ar": "Position (Arabic)",
+            "department_ar": "Department (Arabic)",
+            "select_department": "Select Department"
         },
         "reports": {
             "title": "Reports",
@@ -443,6 +485,8 @@
             "financial": "Financial",
             "performance": "Performance",
             "contracts": "Contracts",
+            "category": "Category",
+            "amount": "Amount",
             "download_report": "Download Report",
             "generate_failed": "Failed to generate report",
             "download_success": "Report downloaded successfully",
@@ -468,8 +512,7 @@
             "player": "Player",
             "type": "Type",
             "value": "Value",
-            "status": "Status"
-        ,
+            "status": "Status",
             "categories": {
                 "Player_Transfers": "Player Transfers",
                 "Sponsorships": "Sponsorships",

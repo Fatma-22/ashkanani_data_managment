@@ -166,16 +166,20 @@ export const Dashboard: React.FC = () => {
                     dataKey="count"
                     nameKey="range"
                     cx="50%"
-                    cy="50%"
-                    outerRadius={screens.xs ? 80 : 100}
-                    label={screens.xs ? false : (entry) => i18n.language === 'ar' ? `${entry.count} :${entry.range}` : `${entry.range}: ${entry.count}`}
+                    cy="45%"
+                    outerRadius={80}
+                    innerRadius={40}
+                    paddingAngle={2}
                   >
                     {marketValueDist.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+                  <Tooltip contentStyle={{ direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }} />
+                  <Legend
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: '20px', direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </Card>

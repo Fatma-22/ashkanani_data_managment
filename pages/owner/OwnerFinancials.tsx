@@ -5,6 +5,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import { FinancialRecord, FinancialStats } from '../../types';
 import { mockFinancialApi } from '../../services/mockOwnerApi';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import dayjs from 'dayjs';
 import { sportsColors, ashkananiSportTheme } from '../../utils/theme';
 
@@ -77,11 +78,24 @@ export const OwnerFinancials: React.FC = () => {
         setIncomeExpenseSeries(series);
 
         // Category breakdown
-        const catMap: Record<string, number> = {};
+        const catMap: Record<string, { nameEn: string, nameAr: string, value: number }> = {};
         records.forEach((r) => {
-            catMap[r.category] = (catMap[r.category] || 0) + r.amount;
+            const key = r.category; // Use English as key
+            if (!catMap[key]) {
+                catMap[key] = {
+                    nameEn: r.category,
+                    nameAr: r.categoryAr || r.category,
+                    value: 0
+                };
+            }
+            catMap[key].value += r.amount;
         });
-        const cats = Object.keys(catMap).map(k => ({ name: k, value: catMap[k] }));
+        const cats = Object.values(catMap).map(item => ({
+            nameEn: item.nameEn,
+            nameAr: item.nameAr,
+            name: i18n.language === 'ar' ? item.nameAr : item.nameEn,
+            value: item.value
+        }));
         setCategorySeries(cats);
     };
 
@@ -162,11 +176,19 @@ export const OwnerFinancials: React.FC = () => {
             title: t('owner.financials.category'),
             dataIndex: 'category',
             key: 'category',
+            render: (_: string, record: FinancialRecord) => {
+                const currentLang = i18n.language;
+                return currentLang === 'ar' && record.categoryAr ? record.categoryAr : record.category;
+            },
         },
         {
             title: t('owner.financials.description'),
             dataIndex: 'description',
             key: 'description',
+            render: (_: string, record: FinancialRecord) => {
+                const currentLang = i18n.language;
+                return currentLang === 'ar' && record.descriptionAr ? record.descriptionAr : record.description;
+            },
         },
         {
             title: t('owner.financials.amount'),
@@ -352,11 +374,34 @@ export const OwnerFinancials: React.FC = () => {
                             <div style={{ height: 320 }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
-                                        <Tooltip formatter={(value: any) => `$${(value as number).toLocaleString()}`} />
-                                        <Legend />
-                                        <Pie data={categorySeries} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(entry) => entry.name}>
+                                        <Tooltip
+                                            formatter={(value: any) => `$${(value as number).toLocaleString()}`}
+                                            contentStyle={{ direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }}
+                                        />
+                                        <Legend
+                                            wrapperStyle={{ direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }}
+                                            iconType="circle"
+                                        />
+                                        <Pie
+                                            data={categorySeries}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="45%"
+                                            outerRadius={80}
+                                            innerRadius={40}
+                                            paddingAngle={2}
+                                        >
                                             {categorySeries.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={index % 2 === 0 ? sportsColors.gold[500] : sportsColors.primary[500]} />
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={
+                                                        index === 0 ? sportsColors.gold[500] :
+                                                            index === 1 ? sportsColors.primary[500] :
+                                                                index === 2 ? '#8B5CF6' :
+                                                                    '#10B981'
+                                                    }
+                                                />
                                             ))}
                                         </Pie>
                                     </PieChart>
@@ -382,7 +427,6 @@ export const OwnerFinancials: React.FC = () => {
                                 <Form.Item
                                     name="type"
                                     label={t('owner.financials.type')}
-                                    rules={[{ required: true }]}
                                 >
                                     <Select placeholder={t('owner.financials.select_type')}>
                                         <Option value="income">{t('owner.financials.income')}</Option>
@@ -394,7 +438,6 @@ export const OwnerFinancials: React.FC = () => {
                                 <Form.Item
                                     name="category"
                                     label={t('owner.financials.category')}
-                                    rules={[{ required: true }]}
                                 >
                                     <Input placeholder={t('owner.financials.category_placeholder')} />
                                 </Form.Item>
@@ -406,7 +449,7 @@ export const OwnerFinancials: React.FC = () => {
                                 <Form.Item
                                     name="amount"
                                     label={t('owner.financials.amount')}
-                                    rules={[{ required: true, type: 'number', min: 0 }]}
+                                    rules={[{ type: 'number', min: 0 }]}
                                 >
                                     <InputNumber
                                         style={{ width: '100%' }}
@@ -420,7 +463,6 @@ export const OwnerFinancials: React.FC = () => {
                                 <Form.Item
                                     name="currency"
                                     label={t('owner.financials.currency')}
-                                    rules={[{ required: true }]}
                                 >
                                     <Select placeholder={t('owner.financials.currency_placeholder')}>
                                         <Option value="USD">USD</Option>
@@ -434,7 +476,6 @@ export const OwnerFinancials: React.FC = () => {
                         <Form.Item
                             name="description"
                             label={t('owner.financials.description')}
-                            rules={[{ required: true }]}
                         >
                             <Input.TextArea rows={3} placeholder={t('owner.financials.description_placeholder')} />
                         </Form.Item>
@@ -442,7 +483,6 @@ export const OwnerFinancials: React.FC = () => {
                         <Form.Item
                             name="date"
                             label={t('owner.financials.date')}
-                            rules={[{ required: true }]}
                         >
                             <DatePicker style={{ width: '100%' }} />
                         </Form.Item>

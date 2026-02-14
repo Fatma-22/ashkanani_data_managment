@@ -35,6 +35,7 @@ import {
 } from 'recharts';
 import { formatCurrency } from '../../utils/helpers';
 import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
 
@@ -315,64 +316,65 @@ export const OwnerDashboard: React.FC = () => {
                 {/* Charts Row 1 */}
                 <Row gutter={[16, 16]}>
                     {/* Market Value Distribution */}
-                        <Col xs={24} lg={12}>
-                            <Card title={t('admin.dashboard.market_dist_title', { defaultValue: 'Market Value Distribution' })} className="card-hover">
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={marketValueDist}
-                                            dataKey="count"
-                                            nameKey="range"
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={screens.xs ? 80 : 100}
-                                            label={screens.xs ? false : (entry) => i18n.language === 'ar' ? `${entry.count} :${entry.range}` : `${entry.range}: ${entry.count}`}
-                                        >
-                                            {marketValueDist.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                        <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </Card>
-                        </Col>
+                    <Col xs={24} lg={12}>
+                        <Card title={t('admin.dashboard.market_dist_title', { defaultValue: 'Market Value Distribution' })} className="card-hover">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                    <Pie
+                                        data={marketValueDist}
+                                        dataKey="count"
+                                        nameKey="range"
+                                        cx="50%"
+                                        cy="45%"
+                                        outerRadius={80}
+                                        innerRadius={40}
+                                        paddingAngle={2}
+                                    >
+                                        {marketValueDist.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip contentStyle={{ direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }} />
+                                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    </Col>
 
-                        {/* Contract Status Breakdown */}
-                        <Col xs={24} lg={12}>
-                            <Card
-                                title={t('admin.dashboard.contract_status_title')}
-                                className="card-hover"
-                                loading={loading}
-                            >
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={contractStatus}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                        <XAxis
-                                            dataKey="status"
-                                            tickFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
-                                            axisLine={false}
-                                            tickLine={false}
-                                        />
-                                        <YAxis axisLine={false} tickLine={false} />
-                                        <Tooltip
-                                            cursor={{ fill: '#f8fafc' }}
-                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                            labelFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
-                                        />
-                                        <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
-                                        <Bar
-                                            name={t('common.count')}
-                                            dataKey="count"
-                                            fill="#3F3F3F"
-                                            radius={[4, 4, 0, 0]}
-                                            barSize={40}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </Card>
-                        </Col>
+                    {/* Contract Status Breakdown */}
+                    <Col xs={24} lg={12}>
+                        <Card
+                            title={t('admin.dashboard.contract_status_title')}
+                            className="card-hover"
+                            loading={loading}
+                        >
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={contractStatus}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                    <XAxis
+                                        dataKey="status"
+                                        tickFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
+                                        axisLine={false}
+                                        tickLine={false}
+                                    />
+                                    <YAxis axisLine={false} tickLine={false} />
+                                    <Tooltip
+                                        cursor={{ fill: '#f8fafc' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        labelFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
+                                    />
+                                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
+                                    <Bar
+                                        name={t('common.count')}
+                                        dataKey="count"
+                                        fill="#3F3F3F"
+                                        radius={[4, 4, 0, 0]}
+                                        barSize={40}
+                                    />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </Card>
+                    </Col>
                 </Row>
 
                 {/* Charts Row 2 */}
@@ -430,22 +432,30 @@ export const OwnerDashboard: React.FC = () => {
                         <Card title={t('owner.dashboard.team_overview')} className="card-hover">
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
-                                    {/** build translated labels for slice names here */}
                                     <Pie
                                         data={[{ key: 'admins', value: adminCount }, { key: 'employees', value: employeeCount }]}
                                         dataKey="value"
                                         nameKey="key"
                                         cx="50%"
-                                        cy="50%"
-                                        outerRadius={screens.xs ? 80 : 100}
-                                        label={(entry) => `${t(`owner.dashboard.${entry.key}`)}: ${entry.value}`}
+                                        cy="45%"
+                                        outerRadius={80}
+                                        innerRadius={40}
+                                        paddingAngle={2}
                                     >
                                         {[adminCount, employeeCount].map((_, idx) => (
                                             <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip formatter={(value: number) => `${formatCurrency(value, i18n.language)}`} labelFormatter={(label) => t(`owner.dashboard.${label}`)} />
-                                    <Legend formatter={(label) => t(`owner.dashboard.${label}`)} />
+                                    <Tooltip
+                                        formatter={(value: number) => `${formatCurrency(value, i18n.language)}`}
+                                        labelFormatter={(label) => t(`owner.dashboard.${label}`)}
+                                        contentStyle={{ direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }}
+                                    />
+                                    <Legend
+                                        formatter={(label) => t(`owner.dashboard.${label}`)}
+                                        wrapperStyle={{ direction: i18n.language === 'ar' ? 'rtl' : 'ltr' }}
+                                        iconType="circle"
+                                    />
                                 </PieChart>
                             </ResponsiveContainer>
                         </Card>

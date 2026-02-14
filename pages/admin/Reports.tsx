@@ -284,7 +284,12 @@ export const Reports: FC = () => {
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        contentStyle={{
+                                            borderRadius: '12px',
+                                            border: 'none',
+                                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                            direction: i18n.language === 'ar' ? 'rtl' : 'ltr'
+                                        }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>

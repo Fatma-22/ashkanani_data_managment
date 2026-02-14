@@ -97,7 +97,7 @@ const AppRoutes = () => {
 
       {/* Shared Authenticated Routes */}
       <Route element={
-        <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.AGENT]}>
+        <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.AGENT, UserRole.OWNER]}>
           <MainLayout />
         </ProtectedRoute>
       }>

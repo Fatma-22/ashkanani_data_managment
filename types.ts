@@ -50,12 +50,46 @@ export enum PreferredFoot {
 }
 
 export enum Sport {
+  // Team Sports
   FOOTBALL = 'Football',
   BASKETBALL = 'Basketball',
+  VOLLEYBALL = 'Volleyball',
+  HANDBALL = 'Handball',
+  FUTSAL = 'Futsal',
+  WATER_POLO = 'Water Polo',
+
+  // Racket Sports
   TENNIS = 'Tennis',
   PADEL = 'Padel',
+  SQUASH = 'Squash',
+  TABLE_TENNIS = 'Table Tennis',
+  BADMINTON = 'Badminton',
+
+  // Combat Sports
+  BOXING = 'Boxing',
+  JUDO = 'Judo',
+  KARATE = 'Karate',
+  TAEKWONDO = 'Taekwondo',
+  WRESTLING = 'Wrestling',
+  FENCING = 'Fencing',
+
+  // Water Sports
   SWIMMING = 'Swimming',
-  VOLLEYBALL = 'Volleyball'
+  DIVING = 'Diving',
+  ROWING = 'Rowing',
+
+  // Athletics & Gymnastics
+  ATHLETICS = 'Athletics',
+  GYMNASTICS = 'Gymnastics',
+
+  // Target Sports
+  SHOOTING = 'Shooting',
+  ARCHERY = 'Archery',
+
+  // Others
+  EQUESTRIAN = 'Equestrian',
+  CYCLING = 'Cycling',
+  WEIGHTLIFTING = 'Weightlifting'
 }
 
 export interface Contract {
@@ -274,6 +308,7 @@ export interface FinancialRecord {
   id: string;
   type: 'income' | 'expense';
   category: string;
+  categoryAr?: string;
   amount: number;
   currency: string;
   description: string;

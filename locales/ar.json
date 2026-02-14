@@ -61,12 +61,13 @@
         "role": "الدور",
         "player": "لاعب",
         "coach": "مدرب",
-        "agent": "الوكيل"
-        ,
+        "agent": "الوكيل",
         "password": "كلمة المرور",
         "yes": "نعم",
         "no": "لا",
-        "inactive": "غير نشط"
+        "inactive": "غير نشط",
+        "close": "إغلاق",
+        "name_ar": "الاسم (عربي)"
     },
     "enums": {
         "Position": {
@@ -89,10 +90,31 @@
         "Sport": {
             "Football": "كرة القدم",
             "Basketball": "كرة السلة",
+            "Volleyball": "كرة الطائرة",
+            "Handball": "كرة اليد",
+            "Futsal": "كرة الصالات",
+            "Water Polo": "كرة الماء",
             "Tennis": "التنس",
             "Padel": "البادل",
+            "Squash": "الاسكواش",
+            "Table Tennis": "تنس الطاولة",
+            "Badminton": "الريشة الطائرة",
+            "Boxing": "الملاكمة",
+            "Judo": "الجودو",
+            "Karate": "الكاراتيه",
+            "Taekwondo": "التايكوندو",
+            "Wrestling": "المصارعة",
+            "Fencing": "المبارزة",
             "Swimming": "السباحة",
-            "Volleyball": "كرة الطائرة"
+            "Diving": "الغطس",
+            "Rowing": "التجديف",
+            "Athletics": "ألعاب القوى",
+            "Gymnastics": "الجمباز",
+            "Shooting": "الرماية",
+            "Archery": "القوس والسهم",
+            "Equestrian": "الفروسية",
+            "Cycling": "ركوب الدراجات",
+            "Weightlifting": "رفع الأثقال"
         },
         "ContractStatus": {
             "Active": "نشط",
@@ -312,7 +334,8 @@
         "update_success": "تم تحديث الملف الشخصي بنجاح!",
         "update_failed": "فشل تحديث الملف الشخصي",
         "full_name_placeholder": "أدخل اسمك الكامل",
-        "email_disabled": "لا يمكن تغيير البريد الإلكتروني"
+        "email_disabled": "لا يمكن تغيير البريد الإلكتروني",
+        "email_placeholder": "أدخل البريد الإلكتروني"
     },
     "landing": {
         "premium_agency": "الدليل الرسمي",
@@ -385,10 +408,10 @@
         "financials": {
             "title": "الإدارة المالية",
             "subtitle": "تتبع الدخل، المصروفات، والأداء المالي",
-                "total_income": "إجمالي الدخل",
-                "total_expense": "إجمالي المصروفات",
-                "net_profit": "صافي الربح",
-                "monthly_profit": "الربح الشهري",
+            "total_income": "إجمالي الدخل",
+            "total_expense": "إجمالي المصروفات",
+            "net_profit": "صافي الربح",
+            "monthly_profit": "الربح الشهري",
             "records_title": "السجلات المالية",
             "add_record": "إضافة سجل",
             "edit_record": "تعديل سجل",
@@ -413,7 +436,7 @@
             "amount_placeholder": "أدخل المبلغ",
             "currency_placeholder": "اختر العملة",
             "description_placeholder": "أدخل الوصف",
-            "related_to_placeholder": "رقم اللاعب/الوكيل",
+            "related_to_placeholder": "اسم اللاعب أو المدرب",
             "select_type": "اختر النوع",
             "income_expense_chart": "رسم بياني الدخل مقابل المصروف",
             "category_breakdown": "تفصيل الفئات",
@@ -453,7 +476,26 @@
             "active_employees": "الموظفين النشطين",
             "total_salary": "إجمالي الرواتب",
             "avg_salary": "متوسط الراتب",
-            "employees_title": "الموظفين"
+            "employees_title": "الموظفين",
+            "view_details": "عرض التفاصيل",
+            "employee_details": "تفاصيل الموظف",
+            "personal_info": "المعلومات الشخصية",
+            "contact_info": "معلومات الاتصال",
+            "job_info": "معلومات الوظيفة",
+            "hire_date": "تاريخ التعيين",
+            "national_id": "الرقم المدني",
+            "address": "العنوان",
+            "email": "البريد الإلكتروني",
+            "phone": "رقم الهاتف",
+            "salary": "الراتب",
+            "actions": "الإجراءات",
+            "status": "الحالة",
+            "name": "الاسم",
+            "position": "الوظيفة",
+            "department": "القسم",
+            "position_ar": "الوظيفة (عربي)",
+            "department_ar": "القسم (عربي)",
+            "select_department": "اختر القسم"
         },
         "reports": {
             "title": "التقارير",
@@ -463,6 +505,8 @@
             "financial": "مالي",
             "performance": "أداء",
             "contracts": "عقود",
+            "category": "الفئة",
+            "amount": "المبلغ",
             "download_report": "تحميل التقرير",
             "generate_failed": "فشل إنشاء التقرير",
             "download_success": "تم تحميل التقرير بنجاح",
@@ -488,8 +532,7 @@
             "player": "اللاعب",
             "type": "النوع",
             "value": "القيمة",
-            "status": "الحالة"
-        ,
+            "status": "الحالة",
             "categories": {
                 "Player_Transfers": "انتقالات اللاعبين",
                 "Sponsorships": "الرعايات",

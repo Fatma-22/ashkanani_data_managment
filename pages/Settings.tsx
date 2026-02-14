@@ -21,6 +21,7 @@ export const Settings: React.FC = () => {
 
             updateUser({
                 name: values.name,
+                email: values.email,
                 avatar: values.avatarUrl // In a real app, this would be the uploaded image URL
             });
 
@@ -49,7 +50,11 @@ export const Settings: React.FC = () => {
                             className="mb-4 border-4 border-gold-500/20"
                         />
                         <Title level={4} className="!mb-1">{user?.name}</Title>
-                        <Text type="secondary">{user?.role === UserRole.ADMIN ? t('roles.admin') : t('roles.agent')}</Text>
+                        <Text type="secondary">
+                            {user?.role === UserRole.OWNER ? t('roles.owner') :
+                                user?.role === UserRole.ADMIN ? t('roles.admin') :
+                                    t('roles.agent')}
+                        </Text>
                         <Divider />
                         <Upload showUploadList={false}>
                             <Button icon={<UploadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}>{t('settings_page.change_photo')}</Button>
@@ -83,8 +88,15 @@ export const Settings: React.FC = () => {
                                     <Form.Item
                                         name="email"
                                         label={t('common.email')}
+                                        rules={[
+                                            { required: true, message: t('login.email_required', { defaultValue: 'Email is required' }) },
+                                            { type: 'email', message: t('login.email_invalid', { defaultValue: 'Invalid email' }) }
+                                        ]}
                                     >
-                                        <Input disabled placeholder={t('settings_page.email_disabled')} />
+                                        <Input
+                                            disabled={user?.role !== UserRole.OWNER}
+                                            placeholder={user?.role === UserRole.OWNER ? t('settings_page.email_placeholder') : t('settings_page.email_disabled')}
+                                        />
                                     </Form.Item>
                                 </Col>
                             </Row>

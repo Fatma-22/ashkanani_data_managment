@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Space, Modal, Form, Input, InputNumber, Select, DatePicker, message, Typography, Row, Col, Statistic, Spin, Table, Tag, Divider, Radio } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, MedicineBoxOutlined, DollarOutlined } from '@ant-design/icons';
-import { Avatar, Switch } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, MedicineBoxOutlined, DollarOutlined, EyeOutlined } from '@ant-design/icons';
+import { Avatar, Switch, Descriptions } from 'antd';
 import { Employee } from '../../types';
 import { mockEmployeeApi } from '../../services/mockOwnerApi';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,8 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 export const OwnerEmployees: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const DEPARTMENTS = ['Marketing', 'Legal', 'Finance', 'Operations', 'HR'];
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
@@ -20,6 +21,8 @@ export const OwnerEmployees: React.FC = () => {
         department: undefined as string | undefined,
         isActive: undefined as boolean | undefined,
     });
+    const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
+    const [detailsModalVisible, setDetailsModalVisible] = useState(false);
     const [form] = Form.useForm();
 
     useEffect(() => {
@@ -59,6 +62,11 @@ export const OwnerEmployees: React.FC = () => {
             hireDate: employee.hireDate ? dayjs(employee.hireDate) : undefined,
         });
         setModalVisible(true);
+    };
+
+    const handleView = (employee: Employee) => {
+        setViewingEmployee(employee);
+        setDetailsModalVisible(true);
     };
 
     const handleDelete = (employee: Employee) => {
@@ -109,54 +117,36 @@ export const OwnerEmployees: React.FC = () => {
             title: t('owner.employees.name'),
             dataIndex: 'name',
             key: 'name',
-            render: (text: string, record: Employee) => (
-                <Space>
-                    <Avatar size={32} icon={<UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} />
-                    <div>
-                        <div style={{ fontWeight: 'bold' }}>{text}</div>
-                        {record.nameAr && (
-                            <div style={{ fontSize: 12, color: '#666' }}>{record.nameAr}</div>
-                        )}
-                    </div>
-                </Space>
-            ),
+            render: (text: string, record: Employee) => {
+                const displayName = i18n.language === 'ar' && record.nameAr ? record.nameAr : text;
+                return (
+                    <Space>
+                        <Avatar size={32} icon={<UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} />
+                        <div style={{ fontWeight: 'bold' }}>{displayName}</div>
+                    </Space>
+                );
+            },
         },
         {
             title: t('owner.employees.position'),
             dataIndex: 'position',
             key: 'position',
-            render: (text: string, record: Employee) => (
-                <div>
-                    <div>{text}</div>
-                    {record.positionAr && (
-                        <div style={{ fontSize: 12, color: '#666' }}>{record.positionAr}</div>
-                    )}
-                </div>
-            ),
+            render: (text: string, record: Employee) => {
+                const displayPosition = i18n.language === 'ar' && record.positionAr ? record.positionAr : text;
+                return <div>{displayPosition}</div>;
+            },
         },
         {
             title: t('owner.employees.department'),
             dataIndex: 'department',
             key: 'department',
-            render: (text: string, record: Employee) => (
-                <div>
-                    <div>{t(`owner.employees.${(text || '').toLowerCase()}`, { defaultValue: text })}</div>
-                    {record.departmentAr && (
-                        <div style={{ fontSize: 12, color: '#666' }}>{record.departmentAr}</div>
-                    )}
-                </div>
-            ),
-        },
-        {
-            title: t('owner.employees.salary'),
-            dataIndex: 'salary',
-            key: 'salary',
-            render: (salary: number) => `$${salary.toLocaleString()}`,
-        },
-        {
-            title: t('owner.employees.hire_date'),
-            dataIndex: 'hireDate',
-            key: 'hireDate',
+            render: (text: string, record: Employee) => {
+                // If arabic and we have explicit departmentAr use it, otherwise try to translate the english key
+                const displayDepartment = i18n.language === 'ar' && record.departmentAr
+                    ? record.departmentAr
+                    : t(`owner.employees.${(text || '').toLowerCase()}`, { defaultValue: text });
+                return <div>{displayDepartment}</div>;
+            },
         },
         {
             title: t('owner.employees.status'),
@@ -172,22 +162,26 @@ export const OwnerEmployees: React.FC = () => {
             title: t('owner.employees.actions'),
             key: 'actions',
             render: (_: any, record: Employee) => (
-                <Space size="middle">
+                <Space size="small">
                     <Button
-                        type="link"
+                        type="text"
+                        icon={<EyeOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                        onClick={() => handleView(record)}
+                        title={t('owner.employees.view_details')}
+                    />
+                    <Button
+                        type="text"
                         icon={<EditOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                         onClick={() => handleEdit(record)}
-                    >
-                        {t('common.edit')}
-                    </Button>
+                        title={t('common.edit')}
+                    />
                     <Button
-                        type="link"
+                        type="text"
                         danger
                         icon={<DeleteOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                         onClick={() => handleDelete(record)}
-                    >
-                        {t('common.delete')}
-                    </Button>
+                        title={t('common.delete')}
+                    />
                 </Space>
             ),
         },
@@ -270,7 +264,7 @@ export const OwnerEmployees: React.FC = () => {
                                         style={{ width: 200 }}
                                         allowClear
                                     >
-                                        {departments.map(dept => (
+                                        {DEPARTMENTS.map(dept => (
                                             <Option key={dept} value={dept}>{t(`owner.employees.${dept.toLowerCase()}`, { defaultValue: dept })}</Option>
                                         ))}
                                     </Select>
@@ -335,7 +329,6 @@ export const OwnerEmployees: React.FC = () => {
                                 <Form.Item
                                     name="name"
                                     label={t('common.name')}
-                                    rules={[{ required: true }]}
                                 >
                                     <Input placeholder={t('owner.employees.name_placeholder')} />
                                 </Form.Item>
@@ -355,7 +348,6 @@ export const OwnerEmployees: React.FC = () => {
                                 <Form.Item
                                     name="position"
                                     label={t('owner.employees.position')}
-                                    rules={[{ required: true }]}
                                 >
                                     <Input placeholder={t('owner.employees.position_placeholder')} />
                                 </Form.Item>
@@ -375,14 +367,11 @@ export const OwnerEmployees: React.FC = () => {
                                 <Form.Item
                                     name="department"
                                     label={t('owner.employees.department')}
-                                    rules={[{ required: true }]}
                                 >
-                                    <Select placeholder={t('owner.employees.department_placeholder')}>
-                                        <Option value="Marketing">{t('owner.employees.marketing')}</Option>
-                                        <Option value="Legal">{t('owner.employees.legal')}</Option>
-                                        <Option value="Finance">{t('owner.employees.finance')}</Option>
-                                        <Option value="Operations">{t('owner.employees.operations')}</Option>
-                                        <Option value="HR">{t('owner.employees.hr')}</Option>
+                                    <Select placeholder={t('owner.employees.department_placeholder')} allowClear>
+                                        {DEPARTMENTS.map(dept => (
+                                            <Option key={dept} value={dept}>{t(`owner.employees.${dept.toLowerCase()}`, { defaultValue: dept })}</Option>
+                                        ))}
                                     </Select>
                                 </Form.Item>
                             </Col>
@@ -401,7 +390,6 @@ export const OwnerEmployees: React.FC = () => {
                                 <Form.Item
                                     name="salary"
                                     label={t('owner.employees.salary')}
-                                    rules={[{ required: true, type: 'number', min: 0 }]}
                                 >
                                     <InputNumber
                                         style={{ width: '100%' }}
@@ -415,7 +403,6 @@ export const OwnerEmployees: React.FC = () => {
                                 <Form.Item
                                     name="hireDate"
                                     label={t('owner.employees.hire_date')}
-                                    rules={[{ required: true }]}
                                 >
                                     <DatePicker style={{ width: '100%' }} />
                                 </Form.Item>
@@ -470,7 +457,63 @@ export const OwnerEmployees: React.FC = () => {
                         </Form.Item>
                     </Form>
                 </Modal>
+
+                {/* View Details Modal */}
+                <Modal
+                    title={t('owner.employees.employee_details')}
+                    open={detailsModalVisible}
+                    onCancel={() => setDetailsModalVisible(false)}
+                    footer={[
+                        <Button key="close" onClick={() => setDetailsModalVisible(false)}>
+                            {t('common.close')}
+                        </Button>
+                    ]}
+                    width={700}
+                >
+                    {viewingEmployee && (
+                        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <Avatar size={64} icon={<UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} />
+                                <div>
+                                    <Title level={4} style={{ margin: 0 }}>
+                                        {i18n.language === 'ar' && viewingEmployee.nameAr ? viewingEmployee.nameAr : viewingEmployee.name}
+                                    </Title>
+                                    <Text type="secondary">
+                                        {i18n.language === 'ar' && viewingEmployee.positionAr ? viewingEmployee.positionAr : viewingEmployee.position}
+                                    </Text>
+                                </div>
+                                <Tag color={viewingEmployee.isActive ? 'green' : 'red'} style={{ marginLeft: 'auto' }}>
+                                    {viewingEmployee.isActive ? t('common.active') : t('common.inactive')}
+                                </Tag>
+                            </div>
+
+                            <Descriptions title={t('owner.employees.job_info')} bordered column={2}>
+                                <Descriptions.Item label={t('owner.employees.department')}>
+                                    {i18n.language === 'ar' && viewingEmployee.departmentAr
+                                        ? viewingEmployee.departmentAr
+                                        : t(`owner.employees.${(viewingEmployee.department || '').toLowerCase()}`, { defaultValue: viewingEmployee.department })
+                                    }
+                                </Descriptions.Item>
+                                <Descriptions.Item label={t('owner.employees.position')}>
+                                    {i18n.language === 'ar' && viewingEmployee.positionAr ? viewingEmployee.positionAr : viewingEmployee.position}
+                                </Descriptions.Item>
+                                <Descriptions.Item label={t('owner.employees.salary')}>{`$${viewingEmployee.salary.toLocaleString()}`}</Descriptions.Item>
+                                <Descriptions.Item label={t('owner.employees.hire_date')}>{viewingEmployee.hireDate}</Descriptions.Item>
+                            </Descriptions>
+
+                            <Descriptions title={t('owner.employees.contact_info')} bordered column={2}>
+                                <Descriptions.Item label={t('owner.employees.email')}>{viewingEmployee.email || '-'}</Descriptions.Item>
+                                <Descriptions.Item label={t('owner.employees.phone')}>{viewingEmployee.phone || '-'}</Descriptions.Item>
+                                <Descriptions.Item label={t('owner.employees.address')} span={2}>{viewingEmployee.address || '-'}</Descriptions.Item>
+                            </Descriptions>
+
+                            <Descriptions title={t('owner.employees.personal_info')} bordered column={2}>
+                                <Descriptions.Item label={t('owner.employees.national_id')}>{viewingEmployee.nationalId || '-'}</Descriptions.Item>
+                            </Descriptions>
+                        </Space>
+                    )}
+                </Modal>
             </Space>
-        </div>
+        </div >
     );
 };
