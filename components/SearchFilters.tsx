@@ -301,20 +301,22 @@ export const SearchFilters: FC<SearchFiltersProps> = ({ filters, onChange, avail
                                             </Space>
                                         </Col>
                                     )}
-                                    <Col xs={24} sm={12} lg={24}>
-                                        <FilterLabel icon={<SearchOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} label={t('players.deal_status')} />
-                                        <Select
-                                            mode="multiple"
-                                            placeholder={t('common.status')}
-                                            className="w-full custom-select"
-                                            value={filters.dealStatus}
-                                            onChange={(v) => onChange({ ...filters, dealStatus: v })}
-                                            allowClear
-                                            maxTagCount="responsive"
-                                        >
-                                            {Object.values(DealStatus).map(s => <Option key={s} value={s}>{t(`enums.DealStatus.${s}`)}</Option>)}
-                                        </Select>
-                                    </Col>
+                                    {!isPublic && (
+                                        <Col xs={24} sm={12} lg={24}>
+                                            <FilterLabel icon={<SearchOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} label={t('players.deal_status')} />
+                                            <Select
+                                                mode="multiple"
+                                                placeholder={t('common.status')}
+                                                className="w-full custom-select"
+                                                value={filters.dealStatus}
+                                                onChange={(v) => onChange({ ...filters, dealStatus: v })}
+                                                allowClear
+                                                maxTagCount="responsive"
+                                            >
+                                                {Object.values(DealStatus).map(s => <Option key={s} value={s}>{t(`enums.DealStatus.${s}`)}</Option>)}
+                                            </Select>
+                                        </Col>
+                                    )}
                                 </Row>
                             </Col>
                         </Row>
