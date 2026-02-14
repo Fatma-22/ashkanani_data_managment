@@ -21,6 +21,8 @@ import {
   Divider,
   Avatar,
   List,
+  DatePicker,
+  Radio,
 } from 'antd';
 import {
   PlusOutlined,
@@ -32,7 +34,8 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { Player, Position, PreferredFoot, DealStatus, PlayerFilters, Sport } from '../../types';
+import dayjs from 'dayjs';
+import { Player, Position, PreferredFoot, DealStatus, PlayerFilters, Sport, ProfileRole, ContractStatus } from '../../types';
 import { mockPlayerApi } from '../../services/mockApi';
 import { formatCurrency } from '../../utils/helpers';
 import StatusBadge from '../../components/StatusBadge';
@@ -90,6 +93,7 @@ export const Players: FC = () => {
     setEditingPlayer(null);
     form.resetFields();
     form.setFieldsValue({
+      role: ProfileRole.PLAYER,
       visibility: {
         nationality: true,
         age: true,
@@ -112,9 +116,22 @@ export const Players: FC = () => {
     setModalVisible(true);
   };
 
+  const [selectedRole, setSelectedRole] = useState<ProfileRole>(ProfileRole.PLAYER);
+
+  useEffect(() => {
+    if (editingPlayer) {
+      setSelectedRole(editingPlayer.role || ProfileRole.PLAYER);
+    } else {
+      setSelectedRole(ProfileRole.PLAYER);
+    }
+  }, [editingPlayer, modalVisible]);
+
   const handleEdit = (player: Player) => {
     setEditingPlayer(player);
-    form.setFieldsValue(player);
+    form.setFieldsValue({
+      ...player,
+      dateOfBirth: player.dateOfBirth ? dayjs(player.dateOfBirth) : undefined,
+    });
     setModalVisible(true);
   };
 
@@ -141,11 +158,15 @@ export const Players: FC = () => {
       const values = await form.validateFields();
 
       if (editingPlayer) {
-        await mockPlayerApi.update(editingPlayer.id, values);
+        await mockPlayerApi.update(editingPlayer.id, {
+          ...values,
+          dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : undefined,
+        });
         message.success('Player updated successfully');
       } else {
         await mockPlayerApi.create({
           ...values,
+          dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : undefined,
           photos: values.photos || [],
           documents: values.documents || [],
           previousClubs: values.previousClubs || [],
@@ -175,9 +196,9 @@ export const Players: FC = () => {
             icon={<PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
             onClick={handleCreate}
             size="large"
-            style={{ background: '#01153e' }}
+            style={{ background: '#3F3F3F' }}
           >
-            {t('admin.players.add_player_btn')}
+            {t('admin.players.add_player_btn', { defaultValue: 'Add Player' })}
           </Button>
         </Col>
       </Row>
@@ -197,7 +218,7 @@ export const Players: FC = () => {
           dataSource={filteredPlayers}
           pagination={{
             pageSize: 6,
-            showTotal: (total) => `${t('common.total')}: ${total} ${t('common.players').toLowerCase()}`,
+            showTotal: (total) => `${t('common.total')}: ${total}`,
             position: 'bottom',
             align: 'center',
           }}
@@ -217,7 +238,7 @@ export const Players: FC = () => {
                       className="border-2 border-slate-100 shadow-sm"
                     />
                     <Space direction="vertical" size={0}>
-                      <Typography.Text className="text-lg font-black text-[#01153e] uppercase tracking-tight leading-none">
+                      <Typography.Text className="text-lg font-black text-[#3F3F3F] uppercase tracking-tight leading-none">
                         {i18n.language === 'ar' && player.nameAr ? player.nameAr : player.name}
                       </Typography.Text>
                       {i18n.language !== 'ar' && player.nameAr && (
@@ -231,35 +252,21 @@ export const Players: FC = () => {
 
                 {/* Info Section */}
                 <Col xs={24} sm={12} lg={14}>
-                  <Row gutter={[20, 20]}>
-                    <Col xs={12} sm={6}>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{t('common.position')}</span>
-                        <Tag className="m-0 border-none bg-slate-50 text-slate-600 font-bold px-3 text-center w-full">
+                  <Row gutter={[20, 20]} align="middle">
+                    <Col xs={12} sm={10}>
+                      <div className="flex flex-wrap gap-2">
+                        <Tag className={`m-0 border-none font-bold px-3 text-center w-fit ${(player.role || ProfileRole.PLAYER) === ProfileRole.COACH
+                          ? 'bg-[#3F3F3F] text-white'
+                          : 'bg-[#C9A24D]/10 text-[#C9A24D]'
+                          }`}>
+                          {(player.role || ProfileRole.PLAYER) === ProfileRole.COACH ? t('common.coach') : t('common.player')}
+                        </Tag>
+                        <Tag className="m-0 border-none bg-slate-50 text-slate-600 font-bold px-3 text-center w-fit">
                           {t(`enums.Sport.${player.sport}`, { defaultValue: player.sport })}
                         </Tag>
-                        <Tag className="m-0 border-none bg-slate-50 text-slate-600 font-bold px-3 text-center w-full mt-1">
-                          {t(`enums.Position.${player.position}`, { defaultValue: player.position })}
-                        </Tag>
                       </div>
                     </Col>
-                    <Col xs={12} sm={6}>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{t('common.club_label', { defaultValue: 'Current Club' })}</span>
-                        <span className="font-bold text-[#01153e] truncate">
-                          {i18n.language === 'ar' && player.clubAr ? player.clubAr : player.club}
-                        </span>
-                      </div>
-                    </Col>
-                    <Col xs={12} sm={6}>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{t('common.value')}</span>
-                        <span className="font-black text-[#01153e] text-base">
-                          {formatCurrency(player.marketValue)}
-                        </span>
-                      </div>
-                    </Col>
-                    <Col xs={12} sm={6}>
+                    <Col xs={12} sm={10}>
                       <div className="flex flex-col">
                         <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{t('common.status')}</span>
                         <StatusBadge status={player.dealStatus} type="deal" />
@@ -275,8 +282,8 @@ export const Players: FC = () => {
                       <Button
                         shape="circle"
                         icon={<EyeOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                        onClick={() => navigate(`/players/${player.id}`)}
-                        className="flex items-center justify-center text-slate-400 hover:text-[#01153e] hover:border-[#01153e]"
+                        onClick={() => navigate(`/admin/players/${player.id}`)}
+                        className="flex items-center justify-center text-slate-400 hover:text-[#3F3F3F] hover:border-[#3F3F3F]"
                       />
                     </Tooltip>
                     <Tooltip title={t('players.edit_data')}>
@@ -306,7 +313,7 @@ export const Players: FC = () => {
 
       {/* Create/Edit Modal */}
       <Modal
-        title={editingPlayer ? t('admin.players.edit_player_title') : t('admin.players.add_player_title')}
+        title={editingPlayer ? (selectedRole === ProfileRole.COACH ? t('admin.players.edit_coach_title', { defaultValue: 'Edit Coach' }) : t('admin.players.edit_player_title', { defaultValue: 'Edit Player' })) : (selectedRole === ProfileRole.COACH ? t('admin.players.add_coach_title', { defaultValue: 'Add New Coach' }) : t('admin.players.add_player_title', { defaultValue: 'Add New Player' }))}
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
@@ -319,14 +326,44 @@ export const Players: FC = () => {
           layout="vertical"
           initialValues={{
             isVisible: true,
+            role: ProfileRole.PLAYER,
           }}
         >
+          <Form.Item name="role" className="mb-6">
+            <Radio.Group
+              optionType="button"
+              buttonStyle="solid"
+              onChange={(e) => setSelectedRole(e.target.value)}
+            >
+              <Radio.Button value={ProfileRole.PLAYER}>{t('common.player', { defaultValue: 'Player' })}</Radio.Button>
+              <Radio.Button value={ProfileRole.COACH}>{t('common.coach', { defaultValue: 'Coach' })}</Radio.Button>
+            </Radio.Group>
+          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="email"
+                label={t('common.email', { defaultValue: 'Email' })}
+                rules={[{ type: 'email' }]}
+              >
+                <Input placeholder="player@example.com" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="dateOfBirth"
+                label={t('players.date_of_birth', { defaultValue: 'Date of Birth' })}
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+          </Row>
+
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
                 name="name"
                 label={t('players.full_name')}
-                rules={[{ required: true, message: t('login.name_required', { defaultValue: 'Please enter name' }) }]}
               >
                 <Input placeholder="e.g., Mohamed Salah" />
               </Form.Item>
@@ -340,7 +377,6 @@ export const Players: FC = () => {
               <Form.Item
                 name="nationalId"
                 label={t('common.national_id')}
-                rules={[{ required: true, message: t('common.national_id') + ' is required' }]}
               >
                 <Input placeholder="e.g., 2900101..." />
               </Form.Item>
@@ -371,12 +407,11 @@ export const Players: FC = () => {
               <Form.Item
                 name="sport"
                 label={t('common.sport')}
-                rules={[{ required: true }]}
               >
                 <Select
                   placeholder={t('common.sport')}
-                  options={Object.values(Sport).map(s => ({
-                    value: s,
+                  options={Object.values(Sport).filter((v) => typeof v === 'string').map((s) => ({
+                    value: s as string,
                     label: t(`enums.Sport.${s}`, { defaultValue: s }),
                   }))}
                 />
@@ -389,7 +424,6 @@ export const Players: FC = () => {
               <Form.Item
                 name="nationality"
                 label={t('players.nationality_en')}
-                rules={[{ required: true }]}
               >
                 <Input placeholder="e.g., Egypt" />
               </Form.Item>
@@ -402,26 +436,26 @@ export const Players: FC = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="position"
-                label={t('common.position')}
-                rules={[{ required: true }]}
-              >
-                <Select
-                  placeholder={t('common.position')}
-                  options={Object.values(Position).map(pos => ({
-                    value: pos,
-                    label: t(`enums.Position.${pos}`, { defaultValue: pos }),
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
+            {selectedRole === ProfileRole.PLAYER && (
+              <Col span={12}>
+                <Form.Item
+                  name="position"
+                  label={t('common.position')}
+                >
+                  <Select
+                    placeholder={t('common.position')}
+                    options={Object.values(Position).filter((v) => typeof v === 'string').map((pos: string) => ({
+                      value: pos,
+                      label: t(`enums.Position.${pos}`, { defaultValue: pos }),
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            )}
+            <Col span={selectedRole === ProfileRole.PLAYER ? 6 : 12}>
               <Form.Item
                 name="club"
                 label={t('players.club_en')}
-                rules={[{ required: true }]}
               >
                 <Input placeholder="e.g., Liverpool FC" />
               </Form.Item>
@@ -438,74 +472,113 @@ export const Players: FC = () => {
               <Form.Item
                 name="marketValue"
                 label={t('players.market_value')}
-                rules={[{ required: true }]}
               >
                 <InputNumber
                   style={{ width: '100%' }}
-                  placeholder="e.g., 85000000"
                   min={0}
                   step={1000000}
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item
-                name="preferredFoot"
-                label={t('common.preferred_foot', { defaultValue: 'Preferred Foot' })}
-                rules={[{ required: true }]}
-              >
-                <Select
-                  placeholder={t('common.preferred_foot', { defaultValue: 'Preferred Foot' })}
-                  options={Object.values(PreferredFoot).map(foot => ({
-                    value: foot,
-                    label: t(`enums.PreferredFoot.${foot}`, { defaultValue: foot }),
-                  }))}
-                />
-              </Form.Item>
-            </Col>
+            {selectedRole === ProfileRole.PLAYER && (
+              <>
+                <Col span={12}>
+                  <Form.Item
+                    name="preferredFoot"
+                    label={t('common.preferred_foot', { defaultValue: 'Preferred Foot' })}
+                  >
+                    <Select
+                      placeholder={t('common.preferred_foot', { defaultValue: 'Preferred Foot' })}
+                      options={Object.values(PreferredFoot).filter((v) => typeof v === 'string').map((foot: string) => ({
+                        value: foot,
+                        label: t(`enums.PreferredFoot.${foot}`, { defaultValue: foot }),
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="dealStatus"
+                    label={t('players.deal_status')}
+                  >
+                    <Select
+                      placeholder={t('players.deal_status')}
+                      options={Object.values(DealStatus).filter(v => typeof v === 'string').map((status: any) => ({
+                        value: status,
+                        label: t(`enums.DealStatus.${status}`, { defaultValue: status }),
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+              </>
+            )}
+            {selectedRole === ProfileRole.COACH && (
+              <Col span={24}>
+                <Form.Item
+                  name="dealStatus"
+                  label={t('players.deal_status')}
+                >
+                  <Select
+                    placeholder={t('players.deal_status')}
+                    options={Object.values(DealStatus).filter((v) => typeof v === 'string').map((status: string) => ({
+                      value: status,
+                      label: t(`enums.DealStatus.${status}`, { defaultValue: status }),
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            )}
           </Row>
+
+          {selectedRole === ProfileRole.PLAYER && (
+            <>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="height"
+                    label={t('players.height_cm')}
+                  >
+                    <InputNumber style={{ width: '100%' }} placeholder="e.g., 175" min={150} max={220} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="weight"
+                    label={t('players.weight_kg')}
+                  >
+                    <InputNumber style={{ width: '100%' }} placeholder="e.g., 71" min={50} max={120} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="jerseyNumber"
+                    label={t('common.jersey_number')}
+                  >
+                    <InputNumber style={{ width: '100%' }} placeholder="e.g., 11" min={1} max={99} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </>
+          )}
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="dealStatus"
-                label={t('players.deal_status')}
-                rules={[{ required: true }]}
+                name="notes"
+                label={t('common.notes', { defaultValue: 'Notes' })}
               >
-                <Select
-                  placeholder={t('players.deal_status')}
-                  options={Object.values(DealStatus).map(status => ({
-                    value: status,
-                    label: t(`enums.DealStatus.${status}`, { defaultValue: status }),
-                  }))}
-                />
+                <Input.TextArea rows={2} placeholder="Additional notes..." />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name="height"
-                label={t('players.height_cm')}
+                name="notesAr"
+                label={t('common.notes_ar', { defaultValue: 'Notes (Arabic)' })}
               >
-                <InputNumber style={{ width: '100%' }} placeholder="e.g., 175" min={150} max={220} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="weight"
-                label={t('players.weight_kg')}
-              >
-                <InputNumber style={{ width: '100%' }} placeholder="e.g., 71" min={50} max={120} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="jerseyNumber"
-                label={t('common.jersey_number')}
-              >
-                <InputNumber style={{ width: '100%' }} placeholder="e.g., 11" min={1} max={99} />
+                <Input.TextArea rows={2} placeholder="ملاحظات إضافية..." dir="rtl" />
               </Form.Item>
             </Col>
           </Row>
@@ -517,7 +590,7 @@ export const Players: FC = () => {
             <Col span={12}>
               <Form.Item
                 name="photos"
-                label={t('players.player_image')}
+                label={selectedRole === ProfileRole.COACH ? t('players.coach_image', { defaultValue: 'Coach Image' }) : t('players.player_image')}
                 valuePropName="fileList"
                 getValueFromEvent={(e) => Array.isArray(e) ? e : e?.fileList}
               >
@@ -533,9 +606,26 @@ export const Players: FC = () => {
                 valuePropName="fileList"
                 getValueFromEvent={(e) => Array.isArray(e) ? e : e?.fileList}
               >
-                <Upload action="/upload-placeholder" maxCount={1}>
+                <Upload action="/upload-placeholder">
                   <Button icon={<UploadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}>{t('players.upload_contract')}</Button>
                 </Upload>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="contractStatus"
+                label={t('admin.contracts.status_label', { defaultValue: 'Contract Status' })}
+              >
+                <Select
+                  placeholder={t('admin.contracts.status_label', { defaultValue: 'Contract Status' })}
+                  options={Object.values(ContractStatus).filter((v) => typeof v === 'string').map((status: string) => ({
+                    value: status,
+                    label: t(`enums.ContractStatus.${status}`, { defaultValue: status }),
+                  }))}
+                />
               </Form.Item>
             </Col>
           </Row>

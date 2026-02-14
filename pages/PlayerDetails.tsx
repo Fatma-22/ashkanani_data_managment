@@ -12,12 +12,17 @@ import {
     InfoCircleOutlined,
     RocketOutlined,
     FilePdfOutlined,
-    DownloadOutlined
+    DownloadOutlined,
+    MailOutlined,
+    SolutionOutlined,
+    NumberOutlined,
+    HistoryOutlined,
 } from '@ant-design/icons';
 import { Player, UserRole, Contract } from '../types';
 import { mockPlayerApi, mockContractApi } from '../services/mockApi';
 import { useAuth } from '../context/AuthContext';
 import StatusBadge from '../components/StatusBadge';
+import { formatCurrency } from '../utils/helpers';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -73,7 +78,7 @@ export const PlayerDetails: FC = () => {
                     type="primary"
                     onClick={() => navigate('/players')}
                     className="mt-4"
-                    style={{ background: '#01153e' }}
+                    style={{ background: '#3F3F3F' }}
                 >
                     {t('players.return_to_directory')}
                 </Button>
@@ -115,7 +120,7 @@ export const PlayerDetails: FC = () => {
                 <div
                     className="absolute inset-0 z-0"
                     style={{
-                        background: 'linear-gradient(135deg, #01153e 0%, #000000 100%)',
+                        background: 'linear-gradient(135deg, #3F3F3F 0%, #3F3F3F 100%)',
                     }}
                 />
 
@@ -139,7 +144,10 @@ export const PlayerDetails: FC = () => {
                                     <Tag className="bg-gold-500 border-none text-black font-bold px-3 py-1 rounded-md uppercase tracking-wider">
                                         {t(`enums.Sport.${player.sport}`, { defaultValue: player.sport })}
                                     </Tag>
-                                    {visibility.position && (
+                                    <Tag className="bg-white/20 border-none text-white font-bold px-3 py-1 rounded-md uppercase tracking-wider">
+                                        {player.role === 'Coach' ? t('common.coach', { defaultValue: 'Coach' }) : t('common.player', { defaultValue: 'Player' })}
+                                    </Tag>
+                                    {visibility.position && player.role !== 'Coach' && (
                                         <Tag className="bg-white/10 border-none text-white font-bold px-3 py-1 rounded-md uppercase tracking-wider">
                                             {t(`enums.Position.${player.position}`, { defaultValue: player.position })}
                                         </Tag>
@@ -194,6 +202,20 @@ export const PlayerDetails: FC = () => {
                                         <div>
                                             <Text className="text-gray-400 block text-xs uppercase tracking-widest">{t('common.age')}</Text>
                                             <Text className="text-white font-bold">{player.age} {t('players.years_label')}</Text>
+                                            {player.dateOfBirth && visibility.dateOfBirth && (
+                                                <Text className="text-gray-500 block text-xs mt-1">{player.dateOfBirth}</Text>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                {player.email && isAuthorized && (
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gold-500">
+                                            <MailOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-xl" />
+                                        </div>
+                                        <div>
+                                            <Text className="text-gray-400 block text-xs uppercase tracking-widest">{t('common.email', { defaultValue: 'Email' })}</Text>
+                                            <Text className="text-white font-bold">{player.email}</Text>
                                         </div>
                                     </div>
                                 )}
@@ -208,7 +230,7 @@ export const PlayerDetails: FC = () => {
                                         </div>
                                     </div>
                                 )}
-                                {visibility.preferredFoot && (
+                                {visibility.preferredFoot && player.role !== 'Coach' && (
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gold-500">
                                             <RocketOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-xl" />
@@ -246,6 +268,21 @@ export const PlayerDetails: FC = () => {
                                         {player.bio}
                                     </Paragraph>
                                 ) : <Empty description={t('players.no_bio_en')} />
+                            )}
+                            {isAuthorized && (player.notes || player.notesAr) && (
+                                <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+                                    <Text type="secondary" className="block text-xs uppercase tracking-widest mb-2 font-bold text-yellow-700">
+                                        {t('common.internal_notes', { defaultValue: 'Internal Notes' })}
+                                    </Text>
+                                    {isAr ? (
+                                        player.notesAr && <Paragraph className="text-gray-700 mb-0 font-arabic" dir="rtl">{player.notesAr}</Paragraph>
+                                    ) : (
+                                        player.notes && <Paragraph className="text-gray-700 mb-0">{player.notes}</Paragraph>
+                                    )}
+                                    {/* Fallback if only one language exists but wrong language selected */}
+                                    {!isAr && !player.notes && player.notesAr && <Paragraph className="text-gray-500 italic mb-0" dir="rtl">{player.notesAr}</Paragraph>}
+                                    {isAr && !player.notesAr && player.notes && <Paragraph className="text-gray-500 italic mb-0">{player.notes}</Paragraph>}
+                                </div>
                             )}
                         </div>
                         {isAuthorized && contracts.length > 0 && (
@@ -292,40 +329,52 @@ export const PlayerDetails: FC = () => {
                                                         </div>
                                                     </Col>
                                                 )}
-                                                {contract.fileUrl && (
-                                                    <Col span={24}>
-                                                        <Divider className="my-4" />
-                                                        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
-                                                                    <FilePdfOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-xl" />
-                                                                </div>
-                                                                <div>
-                                                                    <Text strong className="block">{t('admin.contracts.contract_doc_title')}</Text>
-                                                                    <Text type="secondary" className="text-xs">PDF Document • 2.4 MB</Text>
-                                                                </div>
-                                                            </div>
-                                                            <Space wrap className="mt-4 md:mt-0">
-                                                                <Button
-                                                                    type="text"
-                                                                    icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                                                                    href={contract.fileUrl}
-                                                                    download
-                                                                >
-                                                                    {t('admin.contracts.download_doc')}
-                                                                </Button>
-                                                                <Button
-                                                                    type="primary"
-                                                                    style={{ background: '#01153e' }}
-                                                                    onClick={() => window.open(contract.fileUrl, '_blank')}
-                                                                >
-                                                                    {t('admin.contracts.view_doc')}
-                                                                </Button>
-                                                            </Space>
-                                                        </div>
-                                                    </Col>
-                                                )}
                                             </Row>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                        {isAuthorized && player.documents && player.documents.length > 0 && (
+                            <>
+                                <Divider className="my-6" />
+                                <Title level={4} className="!text-gold-600 !mb-4 flex items-center gap-2">
+                                    <FilePdfOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> {t('players.media_docs')}
+                                </Title>
+                                <div className="space-y-4">
+                                    {player.documents.map((document, index) => (
+                                        <div key={document.id || index} className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
+                                                    <FilePdfOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-xl" />
+                                                </div>
+                                                <div>
+                                                    <Text strong className="block">{document.name}</Text>
+                                                    <Text type="secondary" className="text-xs">{document.type} • {new Date(document.uploadedAt).toLocaleDateString()}</Text>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between flex-wrap gap-4">
+                                                <Space wrap>
+                                                    <Button
+                                                        type="text"
+                                                        icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                                        href={document.url}
+                                                        download
+                                                    >
+                                                        {t('admin.contracts.download_doc')}
+                                                    </Button>
+                                                    <Button
+                                                        type="primary"
+                                                        style={{ background: '#3F3F3F' }}
+                                                        onClick={() => window.open(document.url, '_blank')}
+                                                    >
+                                                        {t('admin.contracts.view_doc')}
+                                                    </Button>
+                                                </Space>
+                                                <Tag color={document.status === 'Active' ? 'success' : document.status === 'Pending' ? 'processing' : document.status === 'Expired' ? 'error' : 'default'}>
+                                                    {t(`enums.ContractStatus.${document.status || 'Active'}`, { defaultValue: document.status || 'Active' })}
+                                                </Tag>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -342,20 +391,26 @@ export const PlayerDetails: FC = () => {
                             <Row gutter={[16, 16]}>
                                 <Col xs={12} sm={8}>
                                     <div className="p-4 md:p-6 bg-slate-50 rounded-xl text-center border border-slate-100 hover:border-gold-500 transition-colors">
-                                        <Text className="text-gray-400 uppercase text-[10px] md:text-xs tracking-widest block mb-2">{t('players.appearances')}</Text>
-                                        <Title level={3} className="!m-0 md:!text-2xl">{player.appearances || 0}</Title>
+                                        <Text className="text-gray-400 uppercase text-[10px] md:text-xs tracking-widest block mb-2">
+                                            {player.role === 'Coach' ? t('players.matches_managed', { defaultValue: 'Matches' }) : t('players.appearances')}
+                                        </Text>
+                                        <Title level={3} className="!m-0 md:!text-2xl">{player.role === 'Coach' ? (player.matchesManaged || 0) : (player.appearances || 0)}</Title>
                                     </div>
                                 </Col>
                                 <Col xs={12} sm={8}>
                                     <div className="p-4 md:p-6 bg-slate-50 rounded-xl text-center border border-slate-100 hover:border-gold-500 transition-colors">
-                                        <Text className="text-gray-400 uppercase text-[10px] md:text-xs tracking-widest block mb-2">{t('players.goals')}</Text>
-                                        <Title level={3} className="!m-0 md:!text-2xl text-gold-600">{player.goals || 0}</Title>
+                                        <Text className="text-gray-400 uppercase text-[10px] md:text-xs tracking-widest block mb-2">
+                                            {player.role === 'Coach' ? t('players.career_wins', { defaultValue: 'Wins' }) : t('players.goals')}
+                                        </Text>
+                                        <Title level={3} className="!m-0 md:!text-2xl text-gold-600">{player.role === 'Coach' ? (player.careerWins || 0) : (player.goals || 0)}</Title>
                                     </div>
                                 </Col>
                                 <Col xs={24} sm={8}>
                                     <div className="p-4 md:p-6 bg-slate-50 rounded-xl text-center border border-slate-100 hover:border-gold-500 transition-colors">
-                                        <Text className="text-gray-400 uppercase text-[10px] md:text-xs tracking-widest block mb-2">{t('players.assists')}</Text>
-                                        <Title level={3} className="!m-0 md:!text-2xl">{player.assists || 0}</Title>
+                                        <Text className="text-gray-400 uppercase text-[10px] md:text-xs tracking-widest block mb-2">
+                                            {player.role === 'Coach' ? t('players.career_losses', { defaultValue: 'Losses' }) : t('players.assists')}
+                                        </Text>
+                                        <Title level={3} className="!m-0 md:!text-2xl">{player.role === 'Coach' ? (player.careerLosses || 0) : (player.assists || 0)}</Title>
                                     </div>
                                 </Col>
                             </Row>
@@ -365,23 +420,68 @@ export const PlayerDetails: FC = () => {
 
                 <Col xs={24} lg={8}>
                     <Card
-                        title={t('players.physical_data')}
+                        title={<div className="flex items-center gap-2"><SolutionOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-gold-500" /> {t('players.professional_data', { defaultValue: 'Professional Data' })}</div>}
                         bordered={false}
                         className="shadow-sm rounded-xl mb-6"
                     >
                         <Descriptions column={1} className="label-gray">
-                            {visibility.height && (
-                                <Descriptions.Item label={t('common.height')}>
-                                    <span className="font-bold">{player.height} {t('common.cm')}</span>
+                            {visibility.marketValue && (
+                                <Descriptions.Item label={t('common.value', { defaultValue: 'Market Value' })}>
+                                    <span className="font-black text-lg text-[#3F3F3F]">{formatCurrency(player.marketValue)}</span>
                                 </Descriptions.Item>
                             )}
-                            {visibility.weight && (
-                                <Descriptions.Item label={t('common.weight')}>
-                                    <span className="font-bold">{player.weight} {t('common.kg')}</span>
+                            {visibility.dealStatus && (
+                                <Descriptions.Item label={t('common.status')}>
+                                    <StatusBadge status={player.dealStatus} type="deal" />
+                                </Descriptions.Item>
+                            )}
+                            {player.role !== 'Coach' && player.jerseyNumber && (
+                                <Descriptions.Item label={<span className="flex items-center gap-1"><NumberOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> {t('common.jersey_number')}</span>}>
+                                    <span className="font-bold text-lg">{player.jerseyNumber}</span>
+                                </Descriptions.Item>
+                            )}
+                            {player.agentName && (
+                                <Descriptions.Item label={t('common.agent', { defaultValue: 'Agent' })}>
+                                    <span className="text-gold-600 font-medium">{player.agentName}</span>
                                 </Descriptions.Item>
                             )}
                         </Descriptions>
+
+                        {visibility.previousClubs && player.previousClubs && player.previousClubs.length > 0 && (
+                            <>
+                                <Divider className="my-4" />
+                                <Text type="secondary" className="block text-xs uppercase tracking-widest mb-3 flex items-center gap-1">
+                                    <HistoryOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> {t('players.previous_clubs', { defaultValue: 'Previous Clubs' })}
+                                </Text>
+                                <div className="flex flex-wrap gap-2">
+                                    {player.previousClubs.map((club, index) => (
+                                        <Tag key={index} className="m-0 bg-slate-50 border-slate-200 text-slate-600">{club}</Tag>
+                                    ))}
+                                </div>
+                            </>
+                        )}
                     </Card>
+
+                    {player.role !== 'Coach' && (
+                        <Card
+                            title={t('players.physical_data')}
+                            bordered={false}
+                            className="shadow-sm rounded-xl mb-6"
+                        >
+                            <Descriptions column={1} className="label-gray">
+                                {visibility.height && (
+                                    <Descriptions.Item label={t('common.height')}>
+                                        <span className="font-bold">{player.height} {t('common.cm')}</span>
+                                    </Descriptions.Item>
+                                )}
+                                {visibility.weight && (
+                                    <Descriptions.Item label={t('common.weight')}>
+                                        <span className="font-bold">{player.weight} {t('common.kg')}</span>
+                                    </Descriptions.Item>
+                                )}
+                            </Descriptions>
+                        </Card>
+                    )}
 
                     {visibility.achievements && player.achievements && player.achievements.length > 0 && (
                         <Card

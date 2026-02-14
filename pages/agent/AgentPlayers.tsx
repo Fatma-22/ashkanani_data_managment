@@ -19,7 +19,7 @@ export const AgentPlayers: FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
   const [filters, setFilters] = useState<PlayerFilters>({});
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
@@ -78,13 +78,13 @@ export const AgentPlayers: FC = () => {
             <Col>
               <Space size="large">
                 <div>
-                  <div style={{ fontSize: 24, fontWeight: 'bold', color: '#01153e' }}>
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: '#3F3F3F' }}>
                     {total}
                   </div>
                   <div style={{ color: '#666' }}>{t('agent_dashboard.assigned_players')}</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 24, fontWeight: 'bold', color: '#01153e' }}>
+                  <div style={{ fontSize: 24, fontWeight: 'bold', color: '#3F3F3F' }}>
                     {players.filter(p => p.dealStatus === 'Signed').length}
                   </div>
                   <div style={{ color: '#666' }}>{t('agent_dashboard.active_deals')}</div>
@@ -92,18 +92,7 @@ export const AgentPlayers: FC = () => {
               </Space>
             </Col>
             <Col>
-              <Radio.Group
-                value={viewMode}
-                onChange={(e) => setViewMode(e.target.value)}
-                buttonStyle="solid"
-              >
-                <Radio.Button value="grid">
-                  <AppstoreOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> {t('common.view_grid')}
-                </Radio.Button>
-                <Radio.Button value="list">
-                  <UnorderedListOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> {t('common.view_list')}
-                </Radio.Button>
-              </Radio.Group>
+              {/* Toggle Removed */}
             </Col>
           </Row>
         </Card>
@@ -120,32 +109,17 @@ export const AgentPlayers: FC = () => {
           />
         ) : (
           <>
-            {viewMode === 'grid' ? (
-              <Row gutter={[16, 16]}>
-                {players.map((player) => (
-                  <Col key={player.id} xs={24} sm={12} md={8} lg={6}>
-                    <PlayerCard
-                      player={player}
-                      variant="grid"
-                      onClick={() => navigate(`/players/${player.id}`)}
-                    />
-                  </Col>
-                ))}
-              </Row>
-            ) : (
-              <div>
-                {players.map((player) => (
-                  <div key={player.id} style={{ marginBottom: 16 }}>
-                    <PlayerCard
-                      player={player}
-                      variant="list"
-                      onClick={() => navigate(`/players/${player.id}`)}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
+            <div>
+              {players.map((player) => (
+                <div key={player.id} style={{ marginBottom: 16 }}>
+                  <PlayerCard
+                    player={player}
+                    variant="list"
+                    onClick={() => navigate(`/agent/players/${player.id}`)}
+                  />
+                </div>
+              ))}
+            </div>
             <div style={{ textAlign: 'center', marginTop: 40 }}>
               <Pagination
                 current={page}
@@ -162,6 +136,6 @@ export const AgentPlayers: FC = () => {
           </>
         )}
       </Space>
-    </div>
+    </div >
   );
 };

@@ -102,7 +102,7 @@ export const Settings: React.FC = () => {
                                     htmlType="submit"
                                     loading={loading}
                                     icon={<SaveOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                                    style={{ background: '#01153e' }}
+                                    style={{ background: '#3F3F3F' }}
                                 >
                                     {t('common.save_btn')}
                                 </Button>
@@ -138,7 +138,7 @@ export const Settings: React.FC = () => {
                             </Row>
                             <Button
                                 type="default"
-                                style={{ borderColor: '#01153e', color: '#01153e' }}
+                                style={{ borderColor: '#3F3F3F', color: '#3F3F3F' }}
                             >
                                 {t('settings_page.update_password')}
                             </Button>

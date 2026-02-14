@@ -6,17 +6,16 @@ import { ContractStatus, DealStatus } from '../types';
 interface StatusBadgeProps {
   status: ContractStatus | DealStatus | string;
   type?: 'contract' | 'deal';
-  variant?: 'default' | 'navy';
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, type = 'contract', variant = 'default' }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, type = 'contract' }) => {
   const { t } = useTranslation();
 
   const getStatusStyles = () => {
     return {
       background: '#ffffff', // White
-      color: '#01153e',      // Navy
-      border: '1px solid #01153e',
+      color: '#3F3F3F',      // Soft Black
+      border: '1px solid #3F3F3F',
       borderRadius: '4px',
       padding: '1px 6px',
       fontWeight: 700,

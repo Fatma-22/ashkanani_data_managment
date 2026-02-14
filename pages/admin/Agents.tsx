@@ -55,12 +55,15 @@ export const Agents: FC = () => {
     }, []);
 
     useEffect(() => {
-        const filtered = agents.filter(agent =>
-            agent.name.toLowerCase().includes(searchText.toLowerCase()) ||
-            (agent.nameAr && agent.nameAr.includes(searchText)) ||
-            (agent.company && agent.company.toLowerCase().includes(searchText.toLowerCase())) ||
-            (agent.companyAr && agent.companyAr.includes(searchText))
-        );
+        const filtered = agents.filter(agent => {
+            if (!agent) return false;
+            return (
+                (agent.name && agent.name.toLowerCase().includes(searchText.toLowerCase())) ||
+                (agent.nameAr && agent.nameAr.includes(searchText)) ||
+                (agent.company && agent.company.toLowerCase().includes(searchText.toLowerCase())) ||
+                (agent.companyAr && agent.companyAr.includes(searchText))
+            );
+        });
         setFilteredAgents(filtered);
     }, [agents, searchText]);
 
@@ -143,7 +146,7 @@ export const Agents: FC = () => {
                         className="border-2 border-slate-100"
                     />
                     <div>
-                        <div className="font-bold text-[#01153e] text-base">
+                        <div className="font-bold text-[#3F3F3F] text-base">
                             {i18n.language === 'ar' && record.nameAr ? record.nameAr : record.name}
                         </div>
                         {i18n.language !== 'ar' && record.nameAr && <div className="text-slate-400 text-sm mt-[-4px]">{record.nameAr}</div>}
@@ -183,7 +186,10 @@ export const Agents: FC = () => {
             key: 'players',
             render: (_, record) => (
                 <Tooltip title={record.assignedPlayerIds.length > 0 ? t('agents.manage_assignments') : t('agents.no_players')}>
-                    <Tag color={record.assignedPlayerIds.length > 0 ? 'blue' : 'default'} className="font-bold rounded-full px-3">
+                    <Tag
+                        bordered={false}
+                        className={`font-bold rounded-full px-3 ${record.assignedPlayerIds.length > 0 ? 'bg-[#C9A24D] text-[#3F3F3F]' : 'bg-slate-100 text-slate-500'}`}
+                    >
                         {record.assignedPlayerIds.length} {t('common.players')}
                     </Tag>
                 </Tooltip>
@@ -198,7 +204,7 @@ export const Agents: FC = () => {
                         type="text"
                         icon={<EditOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                         onClick={() => handleEdit(record)}
-                        className="text-navy-500 hover:bg-slate-100"
+                        className="text-[#3F3F3F] hover:bg-slate-100"
                     />
                     <Button
                         type="text"
@@ -215,7 +221,7 @@ export const Agents: FC = () => {
         <div className="fade-in">
             <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
                 <Col xs={24} md={12}>
-                    <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#01153e' }}>{t('admin.agents.title')}</Title>
+                    <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#3F3F3F' }}>{t('admin.agents.title')}</Title>
                 </Col>
                 <Col xs={24} md={12} className="text-left md:text-right mt-4 md:mt-0">
                     <Button
@@ -223,7 +229,7 @@ export const Agents: FC = () => {
                         icon={<PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                         onClick={handleCreate}
                         size="large"
-                        className="bg-[#01153e] hover:bg-[#022569] border-none shadow-md h-12 px-8 rounded-lg font-bold"
+                        className="bg-[#3F3F3F] hover:bg-[#B68F3F] border-none shadow-md h-12 px-8 rounded-lg font-bold"
                     >
                         {t('admin.agents.add_btn')}
                     </Button>
@@ -281,7 +287,6 @@ export const Agents: FC = () => {
                             <Form.Item
                                 name="name"
                                 label={t('admin.agents.name_en')}
-                                rules={[{ required: true, message: t('login.name_required', { defaultValue: 'Name is required' }) }]}
                             >
                                 <Input placeholder="e.g., Jorge Mendes" className="h-11" />
                             </Form.Item>
@@ -301,7 +306,6 @@ export const Agents: FC = () => {
                             <Form.Item
                                 name="phone"
                                 label={t('agents.phone_number')}
-                                rules={[{ required: true, message: t('login.phone_required', { defaultValue: 'Phone number is required' }) }]}
                             >
                                 <Input prefix={<PhoneOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} placeholder="+00 000 0000" className="h-11" />
                             </Form.Item>
@@ -345,7 +349,6 @@ export const Agents: FC = () => {
                                 name="email"
                                 label={t('agents.login_email')}
                                 rules={[
-                                    { required: true, message: t('login.email_required') },
                                     { type: 'email', message: t('login.email_invalid') }
                                 ]}
                             >
@@ -356,7 +359,6 @@ export const Agents: FC = () => {
                             <Form.Item
                                 name="password"
                                 label={editingAgent ? t('agents.new_password') : t('agents.password_label')}
-                                rules={[{ required: !editingAgent, message: t('login.password_required') }]}
                             >
                                 <Input.Password prefix={<LockOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} placeholder="••••••••" className="h-11" />
                             </Form.Item>
@@ -365,7 +367,7 @@ export const Agents: FC = () => {
 
                     <Form.Item
                         name="assignedPlayerIds"
-                        label={<span className="font-bold text-[#01153e]">{t('agents.assign_players')}</span>}
+                        label={<span className="font-bold text-[#3F3F3F]">{t('agents.assign_players')}</span>}
                         tooltip={t('agents.assign_hint')}
                     >
                         <Select

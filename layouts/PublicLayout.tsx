@@ -14,15 +14,15 @@ export const PublicLayout: React.FC = () => {
 
   return (
     <Layout className="min-h-screen bg-gray-50">
-      <Header className="flex items-center justify-between px-6 md:px-12 sticky top-0 z-50 h-20 shadow-md" style={{ background: 'rgb(1, 21, 62 / 90%)', backdropFilter: 'blur(8px)' }}>
+      <Header className="flex items-center justify-between px-6 md:px-12 sticky top-0 z-50 h-20 shadow-md" style={{ background: 'rgb(63, 63, 63 / 95%)', backdropFilter: 'blur(8px)' }}>
         <div className="flex items-center cursor-pointer gap-3" onClick={() => navigate('/')}>
           <div className="inline-flex items-center justify-center">
             <img src="/logo.png" alt="Ashkanani Sport Logo" style={{ height: 42, objectFit: 'contain' }} />
           </div>
           <div>
-            <div className="text-white text-2xl font-black tracking-tight leading-none uppercase">
-              {t('login.title_part1', { defaultValue: 'ASHKANANI' })} <span style={{ color: '#FFD700' }}>{t('login.title_part2', { defaultValue: 'SPORT' })}</span>
-            </div>
+            <span className="text-white font-black text-xl leading-tight tracking-tighter translate-y-0.5">
+              {t('login.title_part1', { defaultValue: 'ASHKANANI' })} <span style={{ color: '#C9A24D' }}>{t('login.title_part2', { defaultValue: 'SPORT' })}</span>
+            </span>
           </div>
         </div>
         <Space size="large">
@@ -32,9 +32,9 @@ export const PublicLayout: React.FC = () => {
             icon={<LoginOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
             onClick={() => navigate('/login')}
             style={{
-              background: '#FFD700',
-              color: '#01153e',
-              borderColor: '#FFD700',
+              background: '#C9A24D',
+              color: '#3F3F3F',
+              borderColor: '#C9A24D',
               fontWeight: 'bold'
             }}
             className="hover:scale-105 transition-transform"

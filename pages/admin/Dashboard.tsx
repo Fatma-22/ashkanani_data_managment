@@ -68,7 +68,7 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const COLORS = ['#1e40af', '#059669', '#f59e0b', '#dc2626', '#8b5cf6'];
+  const COLORS = ['#C9A24D', '#3F3F3F', '#52c41a', '#faad14', '#f5222d', '#722ed1'];
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
@@ -109,8 +109,8 @@ export const Dashboard: React.FC = () => {
               <Statistic
                 title={t('admin.dashboard.total_players')}
                 value={stats.totalPlayers}
-                prefix={<UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} style={{ color: '#1e40af' }} />}
-                valueStyle={{ color: '#1e40af' }}
+                prefix={<UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#3F3F3F]" />}
+                valueStyle={{ color: '#3F3F3F', fontWeight: 'bold' }}
                 loading={loading}
               />
             </Card>
@@ -120,8 +120,8 @@ export const Dashboard: React.FC = () => {
               <Statistic
                 title={t('admin.dashboard.active_contracts')}
                 value={stats.activeContracts}
-                prefix={<FileTextOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} style={{ color: '#059669' }} />}
-                valueStyle={{ color: '#059669' }}
+                prefix={<FileTextOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#52c41a]" />}
+                valueStyle={{ color: '#3F3F3F', fontWeight: 'bold' }}
                 loading={loading}
               />
             </Card>
@@ -131,8 +131,8 @@ export const Dashboard: React.FC = () => {
               <Statistic
                 title={t('admin.dashboard.expiring_soon')}
                 value={stats.expiringSoon}
-                prefix={<ClockCircleOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} style={{ color: '#f59e0b' }} />}
-                valueStyle={{ color: '#f59e0b' }}
+                prefix={<ClockCircleOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#faad14]" />}
+                valueStyle={{ color: '#3F3F3F', fontWeight: 'bold' }}
                 suffix={<span className="text-xs font-normal text-slate-400 ml-1"> {t('admin.dashboard.contracts_suffix')}</span>}
                 loading={loading}
               />
@@ -143,9 +143,9 @@ export const Dashboard: React.FC = () => {
               <Statistic
                 title={t('admin.dashboard.market_value')}
                 value={formatCurrency(stats.totalMarketValue, i18n.language)}
-                prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} style={{ color: '#eab308' }} />}
+                prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#C9A24D]" />}
                 valueStyle={{
-                  color: '#f59e0b',
+                  color: '#C9A24D',
                   fontWeight: 800
                 }}
                 loading={loading}
@@ -207,7 +207,7 @@ export const Dashboard: React.FC = () => {
                   <Bar
                     name={t('common.count')}
                     dataKey="count"
-                    fill="#1e40af"
+                    fill="#3F3F3F"
                     radius={[4, 4, 0, 0]}
                     barSize={40}
                   />
@@ -239,9 +239,9 @@ export const Dashboard: React.FC = () => {
                     name={t('common.count')}
                     type="monotone"
                     dataKey="count"
-                    stroke="#f59e0b"
+                    stroke="#C9A24D"
                     strokeWidth={3}
-                    dot={{ fill: '#f59e0b', r: 4, strokeWidth: 2, stroke: '#fff' }}
+                    dot={{ fill: '#C9A24D', r: 4, strokeWidth: 2, stroke: '#fff' }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                 </LineChart>

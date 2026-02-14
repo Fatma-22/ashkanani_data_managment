@@ -47,7 +47,9 @@ export const Login: React.FC = () => {
 
       login(role, email, password);
 
-      if (role === UserRole.ADMIN) {
+      if (role === UserRole.OWNER) {
+        navigate('/owner');
+      } else if (role === UserRole.ADMIN) {
         navigate('/admin');
       } else if (role === UserRole.AGENT) {
         navigate('/agent');
@@ -66,7 +68,7 @@ export const Login: React.FC = () => {
 
   if (showSplash) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#01153e]">
+      <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#3F3F3F]">
         <style>
           {`
             @keyframes pulse-gold {
@@ -89,7 +91,7 @@ export const Login: React.FC = () => {
         <div className="animate-pulse-gold flex flex-col items-center text-center">
           <img src="/logo.png" alt="Ashkanani Sport" className="h-40 object-contain mb-6" />
           <Title level={1} className="!text-white !m-0 !text-5xl !font-black tracking-tighter uppercase">
-            {t('login.title_part1', { defaultValue: 'ASHKANANI' })} <span style={{ color: '#FFD700' }}>{t('login.title_part2', { defaultValue: 'SPORT' })}</span>
+            {t('login.title_part1', { defaultValue: 'ASHKANANI' })} <span style={{ color: '#C9A24D' }}>{t('login.title_part2', { defaultValue: 'SPORT' })}</span>
           </Title>
         </div>
       </div>
@@ -97,7 +99,7 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden animate-fade-in" style={{ background: '#01153e' }}>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden animate-fade-in" style={{ background: '#3F3F3F' }}>
       {/* Background decorative elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full opacity-10 bg-gold-500 blur-[100px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full opacity-10 bg-blue-400 blur-[100px]"></div>
@@ -109,8 +111,8 @@ export const Login: React.FC = () => {
         bodyStyle={{ padding: '40px 32px' }}
       >
         <div className="text-center mb-10">
-          <Title level={2} className="!m-0 !text-3xl !font-black tracking-tight" style={{ color: '#01153e' }}>
-            {t('login.title_part1', { defaultValue: 'ASHKANANI' })} <span style={{ color: '#FFD700' }}>{t('login.title_part2', { defaultValue: 'SPORT' })}</span>
+          <Title level={2} className="!m-0 !text-3xl !font-black tracking-tight" style={{ color: '#3F3F3F' }}>
+            {t('login.title_part1', { defaultValue: 'ASHKANANI' })} <span style={{ color: '#C9A24D' }}>{t('login.title_part2', { defaultValue: 'SPORT' })}</span>
           </Title>
           <Text type="secondary" className="mt-2 block font-medium uppercase tracking-wide opacity-60">
             {t('login.welcome')}
@@ -170,6 +172,7 @@ export const Login: React.FC = () => {
             rules={[{ required: true, message: t('login.portal_required', { defaultValue: 'Please select a portal' }) }]}
           >
             <Select className="rounded-lg h-12">
+              <Option value={UserRole.OWNER}>{t('roles.owner', { defaultValue: 'Owner' })}</Option>
               <Option value={UserRole.ADMIN}>{t('roles.admin', { defaultValue: 'Administrator' })}</Option>
               <Option value={UserRole.AGENT}>{t('roles.agent', { defaultValue: 'Certified Agent' })}</Option>
             </Select>
@@ -183,7 +186,7 @@ export const Login: React.FC = () => {
               loading={loading}
               icon={<LoginOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
               className="h-12 text-lg font-bold rounded-lg"
-              style={{ background: '#01153e', borderColor: '#01153e' }}
+              style={{ background: '#C9A24D', borderColor: '#C9A24D' }}
             >
               {t('login.login_btn')}
             </Button>

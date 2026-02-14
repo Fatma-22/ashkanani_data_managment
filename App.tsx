@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
@@ -17,10 +16,10 @@ import { MainLayout } from './layouts/MainLayout';
 import { PublicLayout } from './layouts/PublicLayout';
 
 // Pages
+import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/admin/Dashboard';
 import { Players } from './pages/admin/Players';
-import { Contracts } from './pages/admin/Contracts';
 import { Agents } from './pages/admin/Agents';
 import { Reports } from './pages/admin/Reports';
 import { AgentPlayers } from './pages/agent/AgentPlayers';
@@ -28,6 +27,14 @@ import { PlayerList } from './pages/PlayerList';
 import { PlayerDetails } from './pages/PlayerDetails';
 import { Settings } from './pages/Settings';
 import { AgentStatistics } from './pages/agent/AgentStatistics';
+
+// Owner Pages
+import { OwnerDashboard } from './pages/owner/OwnerDashboard';
+import { OwnerAdmins } from './pages/owner/OwnerAdmins';
+import { OwnerFinancials } from './pages/owner/OwnerFinancials';
+import { OwnerEmployees } from './pages/owner/OwnerEmployees';
+import { OwnerReports } from './pages/owner/OwnerReports';
+import { OwnerPlayers } from './pages/owner/OwnerPlayers';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: UserRole[] }> = ({ children, allowedRoles }) => {
   const { user, isAuthenticated } = useAuth();
@@ -41,11 +48,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: UserRo
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/players" replace />} />
       <Route path="/login" element={<Login />} />
 
       {/* Public Routes */}
       <Route path="/" element={<PublicLayout />}>
+        <Route index element={<LandingPage />} />
         <Route path="players" element={<PlayerList />} />
         <Route path="players/:id" element={<PlayerDetails />} />
       </Route>
@@ -58,7 +65,7 @@ const AppRoutes = () => {
       }>
         <Route index element={<Dashboard />} />
         <Route path="players" element={<Players />} />
-        <Route path="contracts" element={<Contracts />} />
+        <Route path="players/:id" element={<PlayerDetails />} />
         <Route path="agents" element={<Agents />} />
         <Route path="reports" element={<Reports />} />
       </Route>
@@ -71,6 +78,21 @@ const AppRoutes = () => {
       }>
         <Route index element={<AgentStatistics />} />
         <Route path="players" element={<AgentPlayers />} />
+        <Route path="players/:id" element={<PlayerDetails />} />
+      </Route>
+
+      {/* Owner Routes */}
+      <Route path="/owner" element={
+        <ProtectedRoute allowedRoles={[UserRole.OWNER]}>
+          <MainLayout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<OwnerDashboard />} />
+        <Route path="players" element={<OwnerPlayers />} />
+        <Route path="admins" element={<OwnerAdmins />} />
+        <Route path="financials" element={<OwnerFinancials />} />
+        <Route path="employees" element={<OwnerEmployees />} />
+        <Route path="reports" element={<OwnerReports />} />
       </Route>
 
       {/* Shared Authenticated Routes */}

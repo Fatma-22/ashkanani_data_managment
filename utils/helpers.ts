@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { Player, PlayerFilters, Agent, Contract, DashboardStats } from '../types';
+import { Player, PlayerFilters, Agent, Contract, DashboardStats, ProfileRole } from '../types';
 import { translateToArabic } from './translation';
 
 export { translateToArabic };
@@ -25,6 +25,11 @@ export const filterPlayers = (players: Player[], filters: PlayerFilters, contrac
         // Sport filter
         if (filters.sport && filters.sport.length > 0) {
             if (!filters.sport.includes(player.sport)) return false;
+        }
+
+        // Role filter (Player or Coach)
+        if (filters.role && filters.role.length > 0) {
+            if (!filters.role.includes(player.role || ProfileRole.PLAYER)) return false;
         }
 
         // Nationality filter (Dropdown)

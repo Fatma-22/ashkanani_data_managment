@@ -175,7 +175,7 @@ export const Contracts: FC = () => {
       dataIndex: 'playerName',
       key: 'playerName',
       sorter: (a, b) => a.playerName.localeCompare(b.playerName),
-      render: (_, record) => <span className="font-bold text-[#01153e]">{i18n.language === 'ar' && record.playerNameAr ? record.playerNameAr : record.playerName}</span>,
+      render: (_, record) => <span className="font-bold text-[#3F3F3F]">{i18n.language === 'ar' && record.playerNameAr ? record.playerNameAr : record.playerName}</span>,
     },
     {
       title: t('admin.contracts.type_professional', { defaultValue: 'Type' }),
@@ -183,7 +183,7 @@ export const Contracts: FC = () => {
       key: 'type',
       render: (contractType) => (
         <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
-          {contractType}
+          {t(`admin.contracts.type_${contractType.toLowerCase()}`, { defaultValue: contractType })}
         </span>
       ),
     },
@@ -206,7 +206,7 @@ export const Contracts: FC = () => {
       dataIndex: 'annualSalary',
       key: 'annualSalary',
       sorter: (a, b) => a.annualSalary - b.annualSalary,
-      render: (value) => <span className="font-black text-[#01153e]">{formatCurrency(value)}</span>,
+      render: (value) => <span className="font-black text-[#3F3F3F]">{formatCurrency(value)}</span>,
     },
     {
       title: t('common.status'),
@@ -224,14 +224,14 @@ export const Contracts: FC = () => {
               type="text"
               icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
               onClick={() => handleDownload(record)}
-              className="text-navy-500 hover:bg-slate-100"
+              className="text-[#3F3F3F] hover:bg-slate-100"
             />
           )}
           <Button
             type="text"
             icon={<EditOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
             onClick={() => handleEdit(record)}
-            className="text-navy-500 hover:bg-slate-100"
+            className="text-[#3F3F3F] hover:bg-slate-100"
           />
           <Button
             type="text"
@@ -250,7 +250,7 @@ export const Contracts: FC = () => {
     <div className="fade-in">
       <Row justify="space-between" align="middle" style={{ marginBottom: 24 }} gutter={[16, 16]}>
         <Col xs={24} md={12}>
-          <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#01153e' }}>{t('admin.contracts.title')}</Title>
+          <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#3F3F3F' }}>{t('admin.contracts.title')}</Title>
         </Col>
         <Col xs={24} md={12} className="text-left md:text-right">
           <Button
@@ -258,7 +258,7 @@ export const Contracts: FC = () => {
             icon={<PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
             onClick={handleCreate}
             size="large"
-            className="bg-[#01153e] hover:bg-[#022569] border-none shadow-md h-12 px-8 rounded-lg font-bold"
+            className="bg-[#3F3F3F] hover:bg-[#B68F3F] border-none shadow-md h-12 px-8 rounded-lg font-bold"
           >
             {t('admin.contracts.add_btn')}
           </Button>

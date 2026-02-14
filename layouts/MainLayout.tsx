@@ -38,25 +38,44 @@ export const MainLayout: React.FC = () => {
 
   // Define menu items based on role
   const isAdmin = user?.role === UserRole.ADMIN;
+  const isOwner = user?.role === UserRole.OWNER;
 
   const menuItems = [
     {
-      key: isAdmin ? '/admin' : '/agent',
+      key: isOwner ? '/owner' : (isAdmin ? '/admin' : '/agent'),
       icon: <DashboardOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
-      label: isAdmin ? t('common.dashboard') : t('agent_dashboard.statistics'),
+      label: isOwner ? t('owner.dashboard.title') : (isAdmin ? t('common.dashboard') : t('agent_dashboard.statistics')),
     },
     {
-      key: isAdmin ? '/admin/players' : '/agent/players',
+      key: isOwner ? '/owner/players' : (isAdmin ? '/admin/players' : '/agent/players'),
       icon: <UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
       label: t('common.players'),
     },
+    // Owner only items
+    ...(isOwner ? [
+      {
+        key: '/owner/admins',
+        icon: <TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
+        label: t('owner.admins.title'),
+      },
+      {
+        key: '/owner/financials',
+        icon: <BarChartOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
+        label: t('owner.financials.title'),
+      },
+      {
+        key: '/owner/employees',
+        icon: <TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
+        label: t('owner.employees.title'),
+      },
+      {
+        key: '/owner/reports',
+        icon: <BarChartOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
+        label: t('owner.reports.title'),
+      },
+    ] : []),
     // Admin only items
     ...(isAdmin ? [
-      {
-        key: '/admin/contracts',
-        icon: <FileTextOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
-        label: t('common.contracts'),
-      },
       {
         key: '/admin/agents',
         icon: <TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
@@ -87,29 +106,32 @@ export const MainLayout: React.FC = () => {
   );
 
   const sidebarContent = (
-    <>
-      <div className="h-16 flex items-center px-4 gap-2 bg-[#01153e] z-20">
-        <div className="flex-shrink-0">
-          <img src="/logo.png" alt="Logo" style={{ height: 32, width: 'auto', display: 'block' }} />
+    <div className="h-full flex flex-col bg-[#3F3F3F]">
+      <div className="h-16 flex items-center px-4 gap-2 bg-[#3F3F3F] z-20">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="ASM Logo" className="h-10 w-auto" />
+          {(!collapsed || isMobile) && (
+            <div className="flex flex-col">
+              <span className="text-white font-black text-lg leading-tight tracking-tighter">
+                {t('login.title_part1', { defaultValue: 'ASHKANANI' })}<span style={{ color: '#C9A24D' }}> {t('login.title_part2', { defaultValue: 'SPORT' })}</span>
+              </span>
+            </div>
+          )}
         </div>
-        {(!collapsed || isMobile) && (
-          <div className="text-white font-black leading-none whitespace-nowrap overflow-hidden" style={{ fontSize: '15px', letterSpacing: '-0.4px' }}>
-            {t('login.title_part1', { defaultValue: 'ASHKANANI' })}<span style={{ color: '#FFD700' }}> {t('login.title_part2', { defaultValue: 'SPORT' })}</span>
-          </div>
-        )}
       </div>
+
       <Menu
-        theme="dark"
         mode="inline"
+        theme="dark"
         selectedKeys={[location.pathname]}
         items={menuItems}
         onClick={({ key }) => {
           navigate(key);
           if (isMobile) setDrawerVisible(false);
         }}
-        className="bg-[#01153e] border-none"
+        className="bg-[#3F3F3F] border-none flex-1 mt-2"
       />
-    </>
+    </div>
   );
 
   return (
@@ -121,7 +143,7 @@ export const MainLayout: React.FC = () => {
           collapsed={collapsed}
           width={240}
           theme="dark"
-          className="bg-[#01153e] border-r border-[#ffffff10]"
+          className="bg-[#3F3F3F] border-r border-[#ffffff10]"
           style={{
             overflow: 'auto',
             height: '100vh',
@@ -143,7 +165,7 @@ export const MainLayout: React.FC = () => {
         placement={isRTL ? 'right' : 'left'}
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
-        bodyStyle={{ padding: 0, background: '#01153e' }}
+        bodyStyle={{ padding: 0, background: '#3F3F3F' }}
         width={240}
         closable={false}
       >
@@ -155,7 +177,7 @@ export const MainLayout: React.FC = () => {
         marginRight: isMobile ? 0 : (isRTL ? (collapsed ? 80 : 240) : 0),
         transition: 'all 0.2s cubic-bezier(0.2, 0, 0, 1)'
       }}>
-        <Header className="px-4 md:px-6 flex items-center justify-between shadow-sm sticky top-0 z-10" style={{ background: 'rgb(1, 21, 62 / 90%)', backdropFilter: 'blur(8px)' }}>
+        <Header className="px-4 md:px-6 flex items-center justify-between shadow-sm sticky top-0 z-10" style={{ background: 'rgb(63, 63, 63 / 95%)', backdropFilter: 'blur(8px)' }}>
           <Button
             type="text"
             icon={isMobile ? <MenuUnfoldOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> : (
@@ -164,7 +186,7 @@ export const MainLayout: React.FC = () => {
                 (isRTL ? <MenuUnfoldOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> : <MenuFoldOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />)
             )}
             onClick={() => isMobile ? setDrawerVisible(true) : setCollapsed(!collapsed)}
-            className="text-lg w-10 h-10 text-white hover:text-orange-400"
+            className="text-lg w-10 h-10 text-white hover:text-[#C9A24D]"
           />
           <div className="flex items-center gap-4">
             <LanguageSwitcher />

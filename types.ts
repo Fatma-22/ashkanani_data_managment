@@ -1,8 +1,15 @@
 
+
 export enum UserRole {
+  OWNER = 'OWNER',
   ADMIN = 'ADMIN',
   AGENT = 'AGENT',
   PUBLIC = 'PUBLIC'
+}
+
+export enum ProfileRole {
+  PLAYER = 'Player',
+  COACH = 'Coach'
 }
 
 export interface User {
@@ -81,6 +88,7 @@ export interface PlayerDocument {
   name: string;
   url: string;
   type: 'contract' | 'medical' | 'other';
+  status?: ContractStatus;
   uploadedAt: string;
 }
 
@@ -104,12 +112,16 @@ export interface PlayerVisibility {
 
 export interface Player {
   id: string;
+  role: ProfileRole; // Player or Coach
   name: string;
   nameAr?: string; // Arabic name
+  email?: string;
   sport: Sport;
   nationality: string;
   nationalityAr?: string;
   dateOfBirth: string;
+  notes?: string;
+  notesAr?: string;
   age: number;
   position: Position;
   club: string;
@@ -139,6 +151,12 @@ export interface Player {
   appearances?: number;
   goals?: number;
   assists?: number;
+
+  // Coach Stats
+  matchesManaged?: number;
+  careerWins?: number;
+  careerDraws?: number;
+  careerLosses?: number;
 
   // Additional info
   achievements?: string[];
@@ -200,6 +218,7 @@ export interface PlayerFilters {
   sport?: Sport[];
   nationality?: string[];
   position?: Position[];
+  role?: ProfileRole[];
   ageMin?: number;
   ageMax?: number;
   marketValueMin?: number;
@@ -223,4 +242,74 @@ export interface PaginationParams {
 export interface SortParams {
   field: string;
   order: 'ascend' | 'descend';
+}
+
+// Admin Management Types
+export interface AdminPermissions {
+  canAddPlayers: boolean;
+  canEditPlayers: boolean;
+  canDeletePlayers: boolean;
+  canAddAgents: boolean;
+  canEditAgents: boolean;
+  canDeleteAgents: boolean;
+  canViewReports: boolean;
+  canViewFinancials: boolean;
+}
+
+export interface Admin {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  permissions: AdminPermissions;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string; // Owner ID
+  password?: string; // For mock auth
+}
+
+// Financial Management Types
+export interface FinancialRecord {
+  id: string;
+  type: 'income' | 'expense';
+  category: string;
+  amount: number;
+  currency: string;
+  description: string;
+  descriptionAr?: string;
+  date: string;
+  relatedTo?: string; // Player/Agent/Employee ID
+  relatedToType?: 'player' | 'agent' | 'employee';
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface FinancialStats {
+  totalIncome: number;
+  totalExpense: number;
+  netProfit: number;
+  monthlyIncome: number;
+  monthlyExpense: number;
+  yearlyIncome: number;
+  yearlyExpense: number;
+}
+
+// Employee Management Types
+export interface Employee {
+  id: string;
+  name: string;
+  nameAr?: string;
+  position: string;
+  positionAr?: string;
+  department: string;
+  departmentAr?: string;
+  salary: number;
+  hireDate: string;
+  phone?: string;
+  email?: string;
+  nationalId?: string;
+  address?: string;
+  isActive: boolean;
+  createdAt: string;
 }

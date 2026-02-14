@@ -2,12 +2,18 @@ import { ThemeConfig } from 'antd';
 
 export const ashkananiSportTheme: ThemeConfig = {
     token: {
-        // Primary colors - Deep Navy and Gold
-        colorPrimary: '#01153e', // Deep Navy
-        colorSuccess: '#FFD700', // Using Gold for success states
+        // ASM Brand colors - Gold and Dark Teal
+        colorPrimary: '#C9A24D', // Gold
+        colorSuccess: '#C9A24D', // Using Gold for success/primary actions
         colorWarning: '#f59e0b',
         colorError: '#991b1b',
-        colorInfo: '#01153e', // Deep Navy
+        colorInfo: '#C9A24D',
+
+        // Text & Background
+        colorText: '#3F3F3F', // Soft Black (rgb 63 63 63)
+        colorTextDescription: '#8C8C8C', // Premium Gray
+        colorBgContainer: '#ffffff',
+        colorBgLayout: '#F2F2F2', // Off White
 
         // Border radius
         borderRadius: 8,
@@ -30,19 +36,19 @@ export const ashkananiSportTheme: ThemeConfig = {
 
         // Box shadow
         boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)',
-        boxShadowSecondary: '0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)',
+        boxShadowSecondary: '0 6px 166px 0 rgba(0, 0, 0, 0.08), 0 3px 10px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)',
     },
     components: {
         Layout: {
-            headerBg: '#01153e',
-            siderBg: '#01153e',
-            bodyBg: '#f8fafc',
+            headerBg: '#3F3F3F', // Soft Black
+            siderBg: '#3F3F3F', // Soft Black
+            bodyBg: '#F2F2F2', // Off White
         },
         Menu: {
-            darkItemBg: '#01153e',
-            darkItemSelectedBg: '#FFD700',
-            darkItemSelectedColor: '#000000',
-            darkItemHoverBg: 'rgba(255, 215, 0, 0.1)',
+            darkItemBg: '#3F3F3F',
+            darkItemSelectedBg: '#C9A24D',
+            darkItemSelectedColor: '#ffffff',
+            darkItemHoverBg: 'rgba(201, 162, 77, 0.1)',
             itemMarginInline: 8,
         },
         Card: {
@@ -50,12 +56,12 @@ export const ashkananiSportTheme: ThemeConfig = {
             boxShadowTertiary: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
         },
         Button: {
-            primaryShadow: '0 2px 0 rgba(1, 21, 62, 0.1)',
+            primaryShadow: '0 2px 0 rgba(201, 162, 77, 0.1)',
         },
         Table: {
-            headerBg: '#f1f5f9',
-            headerSplitColor: '#e2e8f0',
-            rowHoverBg: '#f8fafc',
+            headerBg: '#F2F2F2',
+            headerSplitColor: '#d4d4d4',
+            rowHoverBg: '#ffffff',
         },
         Badge: {
             dotSize: 8,
@@ -65,21 +71,21 @@ export const ashkananiSportTheme: ThemeConfig = {
 
 // Sports-themed color palette
 export const sportsColors = {
-    // Primary palette (Navy)
+    // Primary palette (Dark Teal)
     primary: {
-        50: '#f0f4f8',
-        100: '#d1e0ec',
-        200: '#a3c2d9',
-        300: '#75a3c6',
-        400: '#4785b3',
-        500: '#01153e', // Main Navy
-        600: '#152b3c',
-        700: '#10212e',
-        800: '#0b1720',
-        900: '#060d12',
+        50: '#F2F2F2',
+        100: '#e6eaea',
+        200: '#ccd5d6',
+        300: '#99abaa',
+        400: '#66807f',
+        500: '#3F3F3F', // Soft Black
+        600: '#3F3F3F',
+        700: '#3F3F3F',
+        800: '#3F3F3F',
+        900: '#3F3F3F',
     },
 
-    // Success/Green (Muted Emerald)
+    // Success/Green (Keeping for functional tags if needed, but primary is Gold)
     success: {
         50: '#f0fdf4',
         100: '#dcfce7',
@@ -87,43 +93,43 @@ export const sportsColors = {
         300: '#86efac',
         400: '#4ade80',
         500: '#22c55e',
-        600: '#065f46', // Main Muted Emerald
+        600: '#065f46',
         700: '#15803d',
         800: '#166534',
         900: '#14532d',
     },
 
-    // Market value emphasis (Premium Gold)
+    // Brand Gold
     gold: {
-        50: '#fffbf0',
-        100: '#fff4d1',
-        200: '#ffe9a3',
-        300: '#ffde75',
-        400: '#ffd347',
-        500: '#FFD700', // Main Gold
-        600: '#ccac00',
-        700: '#998100',
-        800: '#665600',
-        900: '#332b00',
+        50: '#faf6eb',
+        100: '#f5edd7',
+        200: '#ebdbaf',
+        300: '#e1c987',
+        400: '#d7b75f',
+        500: '#C9A24D', // Main Gold
+        600: '#B68F3F',
+        700: '#8c6e31',
+        800: '#624d22',
+        900: '#382c14',
     },
 
     // Status colors
     status: {
-        active: '#065f46',
-        pending: '#FFD700',
-        expired: '#6b7280',
-        negotiation: '#01153e',
-        signed: '#065f46',
-        freeAgent: '#01153e',
-        transferListed: '#FFD700',
+        active: '#C9A24D',
+        pending: '#8C8C8C',
+        expired: '#5E5E5E',
+        negotiation: '#3F3F3F',
+        signed: '#C9A24D',
+        freeAgent: '#3F3F3F',
+        transferListed: '#C9A24D',
     },
 };
 
 // Gradients
 export const gradients = {
-    primary: 'linear-gradient(135deg, #01153e 0%, #060d12 100%)',
-    success: 'linear-gradient(135deg, #15803d 0%, #065f46 100%)',
-    gold: 'linear-gradient(135deg, #FFD700 0%, #c5a059 100%)',
-    blue: 'linear-gradient(135deg, #2563eb 0%, #01153e 100%)',
-    premium: 'linear-gradient(135deg, #01153e 0%, #FFD700 100%)',
+    primary: 'linear-gradient(135deg, #3F3F3F 0%, #3F3F3F 100%)',
+    success: 'linear-gradient(135deg, #C9A24D 0%, #B68F3F 100%)',
+    gold: 'linear-gradient(135deg, #C9A24D 0%, #B68F3F 100%)',
+    blue: 'linear-gradient(135deg, #3F3F3F 0%, #3F3F3F 100%)',
+    premium: 'linear-gradient(135deg, #3F3F3F 0%, #C9A24D 100%)',
 };

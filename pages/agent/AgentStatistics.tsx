@@ -95,9 +95,9 @@ export const AgentStatistics: React.FC = () => {
 
             <Row gutter={[24, 24]}>
                 <Col xs={24} sm={8}>
-                    <Card className="shadow-sm rounded-xl border-none bg-gradient-to-br from-[#01153e] to-[#012a7a] text-white">
+                    <Card className="shadow-sm rounded-xl border-none bg-gradient-to-br from-[#C9A24D] to-[#3F3F3F] text-white">
                         <Statistic
-                            title={<span className="text-white/70">{t('agent_dashboard.total_players')}</span>}
+                            title={<span className="text-white/90">{t('agent_dashboard.total_players')}</span>}
                             value={filteredPlayers.length}
                             prefix={<UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                             valueStyle={{ color: '#fff', fontWeight: 'bold' }}
@@ -110,7 +110,7 @@ export const AgentStatistics: React.FC = () => {
                             title={t('agent_dashboard.total_value')}
                             value={formatCurrency(totalValue)}
                             prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                            valueStyle={{ color: '#01153e', fontWeight: 'bold' }}
+                            valueStyle={{ color: '#C9A24D', fontWeight: 'bold' }}
                         />
                     </Card>
                 </Col>
@@ -120,7 +120,7 @@ export const AgentStatistics: React.FC = () => {
                             title={t('agent_dashboard.active_deals')}
                             value={activeDeals}
                             prefix={<CheckCircleOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                            valueStyle={{ color: '#FFD700', fontWeight: 'bold' }}
+                            valueStyle={{ color: '#C9A24D', fontWeight: 'bold' }}
                         />
                     </Card>
                 </Col>
@@ -138,7 +138,7 @@ export const AgentStatistics: React.FC = () => {
                                             <Text type="secondary">{t('agent_dashboard.players_count', { count: count })}</Text>
                                         </div>
                                         <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                                            <div className="bg-[#01153e] h-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
+                                            <div className="bg-[#C9A24D] h-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
                                         </div>
                                     </div>
                                 );
@@ -173,7 +173,9 @@ export const AgentStatistics: React.FC = () => {
                                     percentage: filteredPlayers.length > 0 ? Math.round((filteredPlayers.filter(p => p.age < 23).length / filteredPlayers.length) * 100) : 0
                                 })}
                             </Text>
-                            <Button type="primary" style={{ background: '#01153e' }} size="large">{t('agent_dashboard.generate_report')}</Button>
+                            <Button type="primary" style={{ background: '#C9A24D', borderColor: '#C9A24D' }} size="large" className="hover:!bg-[#B68F3F]">
+                                {t('agent_dashboard.generate_report')}
+                            </Button>
                         </div>
                     </Card>
                 </Col>

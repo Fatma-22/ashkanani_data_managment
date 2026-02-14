@@ -52,7 +52,7 @@ import {
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-const COLORS = ['#01153e', '#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#012a7a', '#10239e'];
+const COLORS = ['#C9A24D', '#3F3F3F', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#B68F3F', '#3F3F3F'];
 
 export const Reports: FC = () => {
     const { t, i18n } = useTranslation();
@@ -143,7 +143,7 @@ export const Reports: FC = () => {
         <div className="fade-in pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
-                    <Title level={isMobile ? 3 : 2} style={{ margin: 0, color: '#01153e' }}>{t('common.reports')}</Title>
+                    <Title level={4} className="!m-0 !text-[#C9A24D] !font-black uppercase tracking-tight">{t('admin.reports.indicators')}</Title>
                     <Text type="secondary" className="text-sm">{t('admin.reports.subtitle')}</Text>
                 </div>
                 <Space wrap size="middle" className="w-full md:w-auto">
@@ -166,7 +166,7 @@ export const Reports: FC = () => {
                         <Button
                             icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                             onClick={() => handleExport('PDF')}
-                            className="flex-1 md:flex-none rounded-lg h-10 border-[#01153e] text-[#01153e]"
+                            className="flex-1 md:flex-none rounded-lg h-10 border-[#C9A24D] text-[#C9A24D] hover:text-[#B68F3F] hover:border-[#B68F3F]"
                         >
                             {t('admin.reports.export_pdf')}
                         </Button>
@@ -174,7 +174,7 @@ export const Reports: FC = () => {
                             type="primary"
                             icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
                             onClick={() => handleExport('Excel')}
-                            className="flex-1 md:flex-none bg-[#01153e] hover:bg-[#022569] border-none shadow-md h-10 px-6 rounded-lg font-bold"
+                            className="flex-1 md:flex-none bg-[#C9A24D] hover:bg-[#B68F3F] border-none shadow-md h-10 px-6 rounded-lg font-bold"
                         >
                             {t('admin.reports.export_excel')}
                         </Button>
@@ -191,7 +191,7 @@ export const Reports: FC = () => {
                             value={stats?.totalMarketValue || 0}
                             formatter={(val) => formatCurrency(Number(val), i18n.language)}
                             prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-green-500 mr-2" />}
-                            valueStyle={{ color: '#01153e', fontWeight: 800 }}
+                            valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
                         />
                     </Card>
                 </Col>
@@ -201,7 +201,7 @@ export const Reports: FC = () => {
                             title={<span className="text-slate-500 font-medium">{t('admin.dashboard.active_contracts').toUpperCase()}</span>}
                             value={stats?.activeContracts || 0}
                             prefix={<FileProtectOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-blue-500 mr-2" />}
-                            valueStyle={{ color: '#01153e', fontWeight: 800 }}
+                            valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
                         />
                     </Card>
                 </Col>
@@ -221,8 +221,8 @@ export const Reports: FC = () => {
                         <Statistic
                             title={<span className="text-slate-500 font-medium">{t('admin.dashboard.total_players').toUpperCase()}</span>}
                             value={stats?.totalPlayers || 0}
-                            prefix={<TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-navy-400 mr-2" />}
-                            valueStyle={{ color: '#01153e', fontWeight: 800 }}
+                            prefix={<TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#3F3F3F] mr-2" />}
+                            valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
                         />
                     </Card>
                 </Col>
@@ -232,7 +232,7 @@ export const Reports: FC = () => {
                 {/* Market Value Distribution */}
                 <Col xs={24} lg={16}>
                     <Card
-                        title={<span className="text-[#01153e] font-bold">{t('admin.dashboard.market_dist_title')}</span>}
+                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.dashboard.market_dist_title')}</span>}
                         className="shadow-sm rounded-xl h-full"
                         extra={<RiseOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-blue-500" />}
                         loading={loading}
@@ -251,7 +251,7 @@ export const Reports: FC = () => {
                                     <Bar
                                         name={t('common.count')}
                                         dataKey="count"
-                                        fill="#01153e"
+                                        fill="#C9A24D"
                                         radius={[6, 6, 0, 0]}
                                         barSize={60}
                                     />
@@ -263,7 +263,7 @@ export const Reports: FC = () => {
 
                 <Col xs={24} lg={8}>
                     <Card
-                        title={<span className="text-[#01153e] font-bold">{t('admin.reports.composition')}</span>}
+                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.reports.composition')}</span>}
                         className="shadow-sm rounded-xl h-full"
                         loading={loading}
                     >
@@ -303,7 +303,7 @@ export const Reports: FC = () => {
                 {/* Contract Expiry Timeline */}
                 <Col xs={24}>
                     <Card
-                        title={<span className="text-[#01153e] font-bold">{t('admin.reports.expiry_timeline')}</span>}
+                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.reports.expiry_timeline')}</span>}
                         className="shadow-sm rounded-xl"
                         loading={loading}
                     >
@@ -312,8 +312,8 @@ export const Reports: FC = () => {
                                 <AreaChart data={expiryTimeline}>
                                     <defs>
                                         <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#01153e" stopOpacity={0.1} />
-                                            <stop offset="95%" stopColor="#01153e" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#C9A24D" stopOpacity={0.1} />
+                                            <stop offset="95%" stopColor="#C9A24D" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -327,7 +327,7 @@ export const Reports: FC = () => {
                                         name={t('common.count')}
                                         type="monotone"
                                         dataKey="count"
-                                        stroke="#01153e"
+                                        stroke="#C9A24D"
                                         strokeWidth={3}
                                         fillOpacity={1}
                                         fill="url(#colorCount)"
@@ -341,7 +341,7 @@ export const Reports: FC = () => {
                 {/* Contract Status Overview */}
                 <Col xs={24} lg={12}>
                     <Card
-                        title={<span className="text-[#01153e] font-bold">{t('admin.dashboard.contract_status_title')}</span>}
+                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.dashboard.contract_status_title')}</span>}
                         className="shadow-sm rounded-xl h-full"
                         loading={loading}
                     >
@@ -365,7 +365,7 @@ export const Reports: FC = () => {
                                     <Bar
                                         name={t('common.count')}
                                         dataKey="count"
-                                        fill="#1e40af"
+                                        fill="#C9A24D"
                                         radius={[4, 4, 0, 0]}
                                         barSize={40}
                                     />
@@ -378,7 +378,7 @@ export const Reports: FC = () => {
                 {/* Key Indicators */}
                 <Col xs={24} lg={12}>
                     <Card
-                        title={<span className="text-[#01153e] font-bold">{t('admin.reports.indicators')}</span>}
+                        title={<span className="text-[#C9A24D] font-bold">{t('admin.reports.indicators')}</span>}
                         className="shadow-sm rounded-xl h-full"
                         loading={loading}
                     >

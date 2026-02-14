@@ -16,7 +16,7 @@ export const PlayerList: FC = () => {
     const [players, setPlayers] = useState<Partial<Player>[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
     const [filters, setFilters] = useState<PlayerFilters>({});
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(8);
@@ -51,8 +51,8 @@ export const PlayerList: FC = () => {
     return (
         <div className="fade-in" style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <Title level={1}>{t('players.directory_title', { defaultValue: 'Player Directory' })}</Title>
-                <p style={{ fontSize: 16, color: '#666' }}>
+                <Title level={1} style={{ color: '#3F3F3F' }}>{t('players.directory_title', { defaultValue: 'Player Directory' })}</Title>
+                <p style={{ fontSize: 16, color: '#8C8C8C' }}>
                     {t('players.directory_subtitle', { defaultValue: 'Discover our talented roster of professional players' })}
                 </p>
             </div>
@@ -67,21 +67,7 @@ export const PlayerList: FC = () => {
                     isPublic={true}
                 />
 
-                {/* View Mode Toggle */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Radio.Group
-                        value={viewMode}
-                        onChange={(e) => setViewMode(e.target.value)}
-                        buttonStyle="solid"
-                    >
-                        <Radio.Button value="grid">
-                            <AppstoreOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> {t('common.view_grid', { defaultValue: 'Grid' })}
-                        </Radio.Button>
-                        <Radio.Button value="list">
-                            <UnorderedListOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} /> {t('common.view_list', { defaultValue: 'List' })}
-                        </Radio.Button>
-                    </Radio.Group>
-                </div>
+                {/* View Mode Toggle Removed - Forced List View */}
 
                 {/* Players Display */}
                 {loading ? (
@@ -93,19 +79,6 @@ export const PlayerList: FC = () => {
                         description={t('players.no_players_found', { defaultValue: 'No players found' })}
                         style={{ padding: '60px 0' }}
                     />
-                ) : viewMode === 'grid' ? (
-                    <Row gutter={[16, 16]}>
-                        {players.map((player) => (
-                            <Col key={player.id} xs={24} sm={12} md={8} lg={6}>
-                                <PlayerCard
-                                    player={player}
-                                    variant="grid"
-                                    showActions={false}
-                                    onClick={() => navigate(`/players/${player.id}`)}
-                                />
-                            </Col>
-                        ))}
-                    </Row>
                 ) : (
                     <div>
                         {players.map((player) => (

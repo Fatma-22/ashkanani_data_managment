@@ -1,22 +1,22 @@
-import { Player, Contract, ContractStatus, UserRole, User } from '../types';
+import { Player, Contract, ContractStatus, UserRole, User, Position, PreferredFoot, DealStatus } from '../types';
 
 export const MOCK_USERS: User[] = [
-  { id: '1', name: 'Admin User', role: UserRole.ADMIN, avatar: 'https://i.pravatar.cc/150?u=admin' },
-  { id: '2', name: 'Agent Smith', role: UserRole.AGENT, avatar: 'https://i.pravatar.cc/150?u=agent' },
+  { id: '0', name: 'Owner', email: 'owner@ashkenani.com', role: UserRole.OWNER, avatar: 'https://i.pravatar.cc/150?u=owner', password: 'owner123' },
+  { id: '1', name: 'Admin User', email: 'admin@ashkenani.com', role: UserRole.ADMIN, avatar: 'https://i.pravatar.cc/150?u=admin', password: 'admin123' },
+  { id: '2', name: 'Agent Smith', email: 'agent@ashkenani.com', role: UserRole.AGENT, avatar: 'https://i.pravatar.cc/150?u=agent', password: 'agent123' },
 ];
 
-export const MOCK_PLAYERS: Player[] = [
+export const MOCK_PLAYERS: Partial<Player>[] = [
   {
     id: 'p1',
     name: 'Kylian Mbappé',
     nationality: 'France',
     age: 25,
-    position: 'Forward',
+    position: Position.FORWARD,
     club: 'Real Madrid',
     marketValue: 180000000,
-    preferredFoot: 'Right',
-    dealStatus: 'Signed',
-    photoUrl: 'https://picsum.photos/400/400?random=1',
+    preferredFoot: PreferredFoot.RIGHT,
+    dealStatus: DealStatus.SIGNED,
     isVisible: true,
     agentId: '2'
   },
@@ -25,12 +25,11 @@ export const MOCK_PLAYERS: Player[] = [
     name: 'Erling Haaland',
     nationality: 'Norway',
     age: 24,
-    position: 'Forward',
+    position: Position.FORWARD,
     club: 'Manchester City',
     marketValue: 180000000,
-    preferredFoot: 'Left',
-    dealStatus: 'Signed',
-    photoUrl: 'https://picsum.photos/400/400?random=2',
+    preferredFoot: PreferredFoot.LEFT,
+    dealStatus: DealStatus.SIGNED,
     isVisible: true,
     agentId: '2'
   },
@@ -39,12 +38,11 @@ export const MOCK_PLAYERS: Player[] = [
     name: 'Jude Bellingham',
     nationality: 'England',
     age: 21,
-    position: 'Midfielder',
+    position: Position.MIDFIELDER,
     club: 'Real Madrid',
     marketValue: 180000000,
-    preferredFoot: 'Right',
-    dealStatus: 'Signed',
-    photoUrl: 'https://picsum.photos/400/400?random=3',
+    preferredFoot: PreferredFoot.RIGHT,
+    dealStatus: DealStatus.SIGNED,
     isVisible: true
   },
   {
@@ -52,12 +50,11 @@ export const MOCK_PLAYERS: Player[] = [
     name: 'Vinicius Junior',
     nationality: 'Brazil',
     age: 24,
-    position: 'Forward',
+    position: Position.FORWARD,
     club: 'Real Madrid',
     marketValue: 150000000,
-    preferredFoot: 'Right',
-    dealStatus: 'Signed',
-    photoUrl: 'https://picsum.photos/400/400?random=4',
+    preferredFoot: PreferredFoot.RIGHT,
+    dealStatus: DealStatus.SIGNED,
     isVisible: true
   },
   {
@@ -65,12 +62,11 @@ export const MOCK_PLAYERS: Player[] = [
     name: 'Bukayo Saka',
     nationality: 'England',
     age: 22,
-    position: 'Forward',
+    position: Position.FORWARD,
     club: 'Arsenal',
     marketValue: 130000000,
-    preferredFoot: 'Left',
-    dealStatus: 'Signed',
-    photoUrl: 'https://picsum.photos/400/400?random=5',
+    preferredFoot: PreferredFoot.LEFT,
+    dealStatus: DealStatus.SIGNED,
     isVisible: false // Hidden from public
   },
   {
@@ -78,12 +74,11 @@ export const MOCK_PLAYERS: Player[] = [
     name: 'Pedri',
     nationality: 'Spain',
     age: 21,
-    position: 'Midfielder',
+    position: Position.MIDFIELDER,
     club: 'Barcelona',
     marketValue: 80000000,
-    preferredFoot: 'Right',
-    dealStatus: 'Negotiation',
-    photoUrl: 'https://picsum.photos/400/400?random=6',
+    preferredFoot: PreferredFoot.RIGHT,
+    dealStatus: DealStatus.NEGOTIATION,
     isVisible: true
   },
   {
@@ -91,12 +86,11 @@ export const MOCK_PLAYERS: Player[] = [
     name: 'Lamine Yamal',
     nationality: 'Spain',
     age: 17,
-    position: 'Forward',
+    position: Position.FORWARD,
     club: 'Barcelona',
     marketValue: 90000000,
-    preferredFoot: 'Left',
-    dealStatus: 'Signed',
-    photoUrl: 'https://picsum.photos/400/400?random=7',
+    preferredFoot: PreferredFoot.LEFT,
+    dealStatus: DealStatus.SIGNED,
     isVisible: true
   }
 ];
@@ -109,7 +103,9 @@ export const MOCK_CONTRACTS: Contract[] = [
     type: 'Professional',
     startDate: '2024-07-01',
     endDate: '2029-06-30',
-    value: 30000000,
+    annualSalary: 30000000,
+    agentId: '2',
+    isVisible: false,
     status: ContractStatus.ACTIVE
   },
   {
@@ -119,7 +115,9 @@ export const MOCK_CONTRACTS: Contract[] = [
     type: 'Professional',
     startDate: '2022-07-01',
     endDate: '2027-06-30',
-    value: 25000000,
+    annualSalary: 25000000,
+    agentId: '2',
+    isVisible: false,
     status: ContractStatus.ACTIVE
   },
   {
@@ -129,7 +127,9 @@ export const MOCK_CONTRACTS: Contract[] = [
     type: 'Professional',
     startDate: '2021-07-01',
     endDate: '2024-12-30', // Expiring soon
-    value: 9000000,
+    annualSalary: 9000000,
+    agentId: '2',
+    isVisible: false,
     status: ContractStatus.NEGOTIATION
   },
   {
@@ -139,7 +139,9 @@ export const MOCK_CONTRACTS: Contract[] = [
     type: 'Professional',
     startDate: '2023-05-23',
     endDate: '2027-06-30',
-    value: 12000000,
+    annualSalary: 12000000,
+    agentId: '2',
+    isVisible: false,
     status: ContractStatus.ACTIVE
   }
 ];

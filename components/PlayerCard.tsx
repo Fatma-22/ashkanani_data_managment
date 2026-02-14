@@ -54,7 +54,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     </Col>
                     <Col xs={24} sm={12} md={15} lg={16}>
                         <div className="flex flex-col">
-                            <Title level={4} style={{ margin: 0, color: '#01153e' }} className="uppercase font-black tracking-tight">
+                            <Title level={4} style={{ margin: 0, color: '#3F3F3F' }} className="uppercase font-black tracking-tight">
                                 {displayName}
                             </Title>
                             <Space size="middle" style={{ marginTop: 4 }} wrap>
@@ -62,7 +62,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                                     {t(`enums.Sport.${player.sport}`, { defaultValue: player.sport })}
                                 </Tag>
                                 {player.position && (
-                                    <Tag color="default" style={{ background: '#01153e', color: '#FFD700', borderColor: '#FFD700', margin: 0 }}>
+                                    <Tag color="gold" className="bg-[#C9A24D] text-[#3F3F3F] border-[#C9A24D] font-bold uppercase text-[10px]" style={{ margin: 0 }}>
                                         {t(`enums.Position.${player.position}`, { defaultValue: player.position })}
                                     </Tag>
                                 )}
@@ -79,7 +79,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     <Col xs={24} sm={8} md={6} lg={6} className="sm:text-right">
                         <div className="flex flex-col sm:items-end justify-center h-full">
                             {player.marketValue && (
-                                <div className="text-lg font-black text-[#01153e] mb-1">
+                                <div className="text-lg font-black text-[#3F3F3F] mb-1">
                                     {formatCurrency(player.marketValue)}
                                 </div>
                             )}
@@ -110,7 +110,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     style={{
                         height: 280,
                         overflow: 'hidden',
-                        background: `linear-gradient(to bottom, rgba(1, 21, 62, 0.1), rgba(1, 21, 62, 0.6)), url(${mainPhoto})`,
+                        background: `linear-gradient(to bottom, rgba(63, 63, 63, 0.1), rgba(63, 63, 63, 0.6)), url(${mainPhoto})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         position: 'relative',
@@ -118,7 +118,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 >
                     {player.dealStatus && (
                         <div style={{ position: 'absolute', top: 12, right: 12 }}>
-                            <StatusBadge status={player.dealStatus} type="deal" variant="navy" />
+                            <StatusBadge status={player.dealStatus} type="deal" />
                         </div>
                     )}
                 </div>
@@ -137,7 +137,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                         <Tag color="gold" className="border-gold-500 bg-gold-50 text-gold-700 font-bold uppercase text-[10px]" style={{ marginInlineEnd: 0 }}>
                             {t(`enums.Sport.${player.sport}`, { defaultValue: player.sport })}
                         </Tag>
-                        <Tag color="default" style={{ marginRight: 0, background: '#01153e', color: '#FFD700', borderColor: '#FFD700' }}>
+                        <Tag color="gold" className="bg-[#C9A24D] text-[#3F3F3F] border-[#C9A24D] font-bold uppercase text-[10px]" style={{ marginRight: 0 }}>
                             {t(`enums.Position.${player.position}`, { defaultValue: player.position })}
                         </Tag>
 

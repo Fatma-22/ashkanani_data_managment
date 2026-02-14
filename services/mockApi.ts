@@ -14,6 +14,7 @@ import {
     UserRole,
     User,
     Sport,
+    ProfileRole,
 } from '../types';
 import { filterPlayers, isContractExpiringSoon, calculateAge, generateId } from '../utils/helpers';
 import { translateToArabic } from '../utils/translation';
@@ -23,6 +24,7 @@ import dayjs from 'dayjs';
 let mockPlayers: Player[] = [
     {
         id: '1',
+        role: ProfileRole.PLAYER,
         name: 'Mohamed Salah',
         nameAr: 'محمد صلاح',
         sport: Sport.FOOTBALL,
@@ -79,6 +81,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '2',
+        role: ProfileRole.PLAYER,
         name: 'Karim Benzema',
         nameAr: 'كريم بنزيما',
         sport: Sport.FOOTBALL,
@@ -130,6 +133,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '3',
+        role: ProfileRole.PLAYER,
         name: 'Achraf Hakimi',
         nameAr: 'أشرف حكيمي',
         sport: Sport.FOOTBALL,
@@ -181,6 +185,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '4',
+        role: ProfileRole.PLAYER,
         name: 'Riyad Mahrez',
         nameAr: 'رياض محرز',
         sport: Sport.FOOTBALL,
@@ -232,6 +237,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '5',
+        role: ProfileRole.PLAYER,
         name: 'N\'Golo Kanté',
         nameAr: 'نغولو كانتي',
         sport: Sport.FOOTBALL,
@@ -283,6 +289,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '6',
+        role: ProfileRole.PLAYER,
         name: 'Hakim Ziyech',
         nameAr: 'حكيم زياش',
         sport: Sport.FOOTBALL,
@@ -337,6 +344,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '7',
+        role: ProfileRole.PLAYER,
         name: 'Edouard Mendy',
         nameAr: 'إدوار ميندي',
         sport: Sport.FOOTBALL,
@@ -388,6 +396,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '8',
+        role: ProfileRole.PLAYER,
         name: 'Sadio Mané',
         nameAr: 'ساديو ماني',
         sport: Sport.FOOTBALL,
@@ -439,6 +448,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '9',
+        role: ProfileRole.PLAYER,
         name: 'Yassine Bounou',
         nameAr: 'ياسين بونو',
         sport: Sport.FOOTBALL,
@@ -490,6 +500,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '10',
+        role: ProfileRole.PLAYER,
         name: 'Thomas Partey',
         nameAr: 'توماس بارتي',
         sport: Sport.FOOTBALL,
@@ -541,6 +552,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '11',
+        role: ProfileRole.PLAYER,
         name: 'LeBron James',
         nameAr: 'ليبرون جيمس',
         sport: Sport.BASKETBALL,
@@ -592,6 +604,7 @@ let mockPlayers: Player[] = [
     },
     {
         id: '12',
+        role: ProfileRole.PLAYER,
         name: 'Rafael Nadal',
         nameAr: 'رافاييل نادال',
         sport: Sport.TENNIS,
@@ -627,6 +640,54 @@ let mockPlayers: Player[] = [
             height: true,
             weight: true,
             previousClubs: false,
+            dealStatus: true,
+            contractInfo: false,
+            photos: true,
+            achievements: true,
+            stats: false,
+        },
+        isVisible: true,
+        createdAt: '2023-01-01',
+        updatedAt: '2024-01-01',
+    },
+    {
+        id: '13',
+        role: ProfileRole.COACH,
+        name: 'Walid Regragui',
+        nameAr: 'وليد الركراكي',
+        sport: Sport.FOOTBALL,
+        nationality: 'Morocco',
+        nationalityAr: 'المغرب',
+        dateOfBirth: '1975-09-23',
+        age: 48,
+        position: Position.MIDFIELDER, // Former position
+        club: 'Morocco National Team',
+        clubAr: 'منتخب المغرب',
+        marketValue: 0,
+        preferredFoot: PreferredFoot.RIGHT,
+        dealStatus: DealStatus.SIGNED,
+        height: 180,
+        weight: 75,
+        previousClubs: ['Wydad AC', 'FUS Rabat'],
+        photos: [
+            { id: 'c1-1', url: 'https://images.unsplash.com/photo-1517466787929-bc90951d64b8?w=400', caption: 'Coach', isMain: true },
+        ],
+        documents: [],
+        achievements: ['World Cup Semi-Finalist 2022', 'CAF Champions League Winner'],
+        achievementsAr: ['نصف نهائي كأس العالم 2022', 'بطل دوري أبطال أفريقيا'],
+        bio: 'Moroccan professional football manager and former player.',
+        bioAr: 'مدرب كرة قدم مغربي ولاعب سابق.',
+        visibility: {
+            nationality: true,
+            age: true,
+            dateOfBirth: true,
+            position: true,
+            club: true,
+            marketValue: false,
+            preferredFoot: false,
+            height: false,
+            weight: false,
+            previousClubs: true,
             dealStatus: true,
             contractInfo: false,
             photos: true,
