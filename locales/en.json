@@ -337,6 +337,26 @@
         "email_disabled": "Email cannot be changed",
         "email_placeholder": "Enter email address"
     },
+    "landing": {
+        "premium_agency": "OFFICIAL PLAYER DIRECTORY",
+        "hero_title_1": "ELITE TALENT",
+        "hero_title_2": "WORLD-CLASS MANAGEMENT",
+        "hero_subtitle": "Discover the future of sports with Ashkanani. We bridge the gap between exceptional talent and global opportunities.",
+        "cta_primary": "Explore Roster",
+        "cta_secondary": "Admin Portal",
+        "stats_players": "Professional Athletes",
+        "stats_countries": "Countries Reach",
+        "stats_value": "Total Market Value",
+        "stats_awards": "Major Championships",
+        "why_us": "WHY CHOOSE ASHKANANI",
+        "features_title": "Redefining Sports Excellence",
+        "feat_1_title": "Talent Identification",
+        "feat_1_desc": "Leveraging advanced analytics and a global scouting network to identify and nurture the stars of tomorrow.",
+        "feat_2_title": "Holistic Management",
+        "feat_2_desc": "Comprehensive career guidance covering contracts, brand endorsements, and personal development for peak performance.",
+        "feat_3_title": "Global Network",
+        "feat_3_desc": "Strategic partnerships with top-tier clubs and agencies worldwide, unlocking boundless opportunities for our athletes."
+    },
     "owner": {
         "dashboard": {
             "title": "Owner Dashboard",
