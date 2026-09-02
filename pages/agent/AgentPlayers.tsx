@@ -1,14 +1,17 @@
 import { useEffect, useState, FC } from 'react';
-import { Row, Col, Typography, Space, Radio, Empty, Spin, Button, Card, Pagination } from 'antd';
+import { Row, Col, Typography, Space, Empty, Spin, Card, Pagination } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { DownloadOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { TeamOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Player, PlayerFilters } from '../../types';
-import { mockPlayerApi } from '../../services/mockApi';
-import { translateToArabic } from '../../utils/helpers';
+import { Player, PlayerFilters, DealStatus } from '../../types';
+import { playerService } from '../../services/playerService';
 import PlayerCard from '../../components/PlayerCard';
 import SearchFilters from '../../components/SearchFilters';
+import { CLUB_MAP } from '../../utils/translation';
+import { metaService } from '../../services/metaService';
+import { useStickyState } from '../../utils/hooks';
+import { useRef } from 'react';
 
 const { Title } = Typography;
 
@@ -20,30 +23,42 @@ export const AgentPlayers: FC = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const [filters, setFilters] = useState<PlayerFilters>({});
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(8);
+  const [filters, setFilters] = useStickyState<PlayerFilters>({}, 'AgentPlayers_filters');
+  const [page, setPage] = useStickyState(1, 'AgentPlayers_page');
+  const [pageSize, setPageSize] = useStickyState(8, 'AgentPlayers_pageSize');
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     loadPlayers();
   }, [filters, page, pageSize]);
 
   useEffect(() => {
+    if (isFirstRender.current) {
+        isFirstRender.current = false;
+        return;
+    }
     setPage(1);
   }, [filters]);
 
   const loadPlayers = async () => {
     setLoading(true);
     try {
-      // In a real app, the API would handle pagination and and agent filtering
-      const allPlayers = await mockPlayerApi.getAll(filters);
-      const assignedPlayers = user?.assignedPlayerIds
-        ? allPlayers.filter(p => user.assignedPlayerIds?.includes(p.id))
-        : allPlayers;
-
-      setTotal(assignedPlayers.length);
-      const startIndex = (page - 1) * pageSize;
-      setPlayers(assignedPlayers.slice(startIndex, startIndex + pageSize));
+      // Backend playerService.getAll already filters by agent if authenticated
+      const { players: myPlayers, total: tCount } = await playerService.getAll(filters, page, pageSize);
+      const normalized = myPlayers.map((p: any) => ({
+        ...p,
+        nameAr: p.name_ar || p.nameAr,
+        nationalityAr: p.nationality_ar || p.nationalityAr,
+        clubAr: p.club_ar || p.clubAr,
+        dealStatus: p.deal_status || p.dealStatus,
+        marketValue: p.market_value || p.marketValue,
+        nationalId: p.national_id || p.nationalId,
+        jerseyNumber: p.jersey_number || p.jerseyNumber,
+        bioAr: p.bio_ar || p.bioAr,
+        notesAr: p.notes_ar || p.notesAr,
+      }));
+      setPlayers(normalized);
+      setTotal(tCount);
     } catch (error) {
       console.error('Failed to load players:', error);
     } finally {
@@ -51,14 +66,25 @@ export const AgentPlayers: FC = () => {
     }
   };
 
-  const nationalities = Array.from(new Set(players.map(p => p.nationality)));
-  const clubs = Array.from(new Set(players.map(p => p.club)));
+  const [nationalities, setNationalities] = useState<{ value: string; label: string }[]>([]);
+  useEffect(() => {
+    const fetchNationalities = async () => {
+      try {
+        const nats = await metaService.getNationalities();
+        setNationalities(nats);
+      } catch (e) {
+        setNationalities([]);
+      }
+    };
+    fetchNationalities();
+  }, []);
+  const clubs = Object.keys(CLUB_MAP);
 
   return (
     <div className="fade-in">
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>{t('agent_dashboard.assigned_players_title')}</Title>
-        <p style={{ fontSize: 16, color: '#666' }}>
+        <p style={{ fontSize: 16, color: '#C9A24D', fontWeight: 500 }}>
           {t('agent_dashboard.assigned_players_subtitle')}
         </p>
       </div>
@@ -81,13 +107,13 @@ export const AgentPlayers: FC = () => {
                   <div style={{ fontSize: 24, fontWeight: 'bold', color: '#3F3F3F' }}>
                     {total}
                   </div>
-                  <div style={{ color: '#666' }}>{t('agent_dashboard.assigned_players')}</div>
+                  <div style={{ color: '#C9A24D', fontWeight: 600 }}>{t('agent_dashboard.assigned_players')}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: 24, fontWeight: 'bold', color: '#3F3F3F' }}>
-                    {players.filter(p => p.dealStatus === 'Signed').length}
+                    {players.filter(p => p.dealStatus === DealStatus.SIGNED).length}
                   </div>
-                  <div style={{ color: '#666' }}>{t('agent_dashboard.active_deals')}</div>
+                  <div style={{ color: '#C9A24D', fontWeight: 600 }}>{t('agent_dashboard.active_deals')}</div>
                 </div>
               </Space>
             </Col>
@@ -110,15 +136,18 @@ export const AgentPlayers: FC = () => {
         ) : (
           <>
             <div>
+            <Row gutter={[24, 40]}>
               {players.map((player) => (
-                <div key={player.id} style={{ marginBottom: 16 }}>
+                <Col key={player.id} xs={12} sm={12} md={8} lg={6}>
                   <PlayerCard
                     player={player}
-                    variant="list"
+                    variant="grid"
+                    showActions={false}
                     onClick={() => navigate(`/agent/players/${player.id}`)}
                   />
-                </div>
+                </Col>
               ))}
+            </Row>
             </div>
             <div style={{ textAlign: 'center', marginTop: 40 }}>
               <Pagination

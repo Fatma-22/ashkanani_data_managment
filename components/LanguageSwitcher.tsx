@@ -32,8 +32,15 @@ export const LanguageSwitcher: React.FC = () => {
         <Dropdown menu={{ items }} placement="bottomRight" arrow>
             <Button
                 type="text"
-                className="text-white hover:text-gold-500 flex items-center justify-center h-10 w-10"
+                className="flex items-center justify-center !h-10 !w-10 !p-0 hover:opacity-80 transition-all duration-200"
+                style={{
+                    color: '#C9A24D',
+                    fontSize: '20px',
+                    border: '1px solid rgba(201, 162, 77, 0.5)',
+                    borderRadius: '6px',
+                }}
                 icon={<GlobalOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} style={{ fontSize: '18px' }} />}
+                title="Change Language / تغيير اللغة"
             />
         </Dropdown>
     );

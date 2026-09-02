@@ -1,4 +1,4 @@
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState, useMemo, FC } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Row,
@@ -13,6 +13,10 @@ import {
     Tag,
     Select,
     Grid,
+    Result,
+    DatePicker,
+    Checkbox,
+    Popover,
 } from 'antd';
 import {
     BarChart,
@@ -37,9 +41,13 @@ import {
     HistoryOutlined,
     DollarOutlined,
     MedicineBoxOutlined,
+    LockOutlined,
 } from '@ant-design/icons';
-import { mockDashboardApi, mockPlayerApi } from '../../services/mockApi';
-import { formatCurrency } from '../../utils/helpers';
+import { SettingOutlined } from '@ant-design/icons';
+import { dashboardService } from '../../services/dashboardService';
+import { playerService } from '../../services/playerService';
+import { formatCurrency, exportToCSV, triggerPrint } from '../../utils/helpers';
+import dayjs from 'dayjs';
 import {
     DashboardStats,
     MarketValueDistribution,
@@ -48,14 +56,19 @@ import {
     Player,
     Sport
 } from '../../types';
+import { PrintableReport } from '../../components/PrintableReport';
+import { useAuth } from '../../context/AuthContext';
+import { canViewReports } from '../../utils/permissionHelpers';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const COLORS = ['#C9A24D', '#3F3F3F', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#B68F3F', '#3F3F3F'];
 
 export const Reports: FC = () => {
     const { t, i18n } = useTranslation();
+    const { user } = useAuth();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [valueDist, setValueDist] = useState<MarketValueDistribution[]>([]);
     const [contractStatus, setContractStatus] = useState<ContractStatusData[]>([]);
@@ -63,34 +76,55 @@ export const Reports: FC = () => {
     const [positionData, setPositionData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedSport, setSelectedSport] = useState<Sport | 'All'>('All');
+    const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
     const screens = Grid.useBreakpoint();
     const isMobile = !screens.md;
 
+    // Define available columns for Admin report PDF
+    const allColumnDefs = useMemo(() => [
+        { key: 'range', label: t('admin.dashboard.range', { defaultValue: 'Range' }) },
+        { key: 'count', label: t('common.count') },
+    ], [t]);
+
+    const [selectedFields, setSelectedFields] = useState<string[]>(() => allColumnDefs.map(c => c.key));
+
     useEffect(() => {
         loadData();
-    }, [selectedSport]);
+    }, [selectedSport, dateRange]);
 
     const loadData = async () => {
         setLoading(true);
         try {
+            const filters = {
+                sport: selectedSport,
+                start_date: dateRange?.[0]?.format('YYYY-MM-DD'),
+                end_date: dateRange?.[1]?.format('YYYY-MM-DD')
+            };
+
             const [
                 statsData,
                 distData,
                 statusData,
                 expiryData,
-                allPlayers
+                dealTypeData,
+                playersData
             ] = await Promise.all([
-                mockDashboardApi.getStats(selectedSport),
-                mockDashboardApi.getMarketValueDistribution(selectedSport),
-                mockDashboardApi.getContractStatusData(selectedSport),
-                mockDashboardApi.getContractExpiryTimeline(selectedSport),
-                mockPlayerApi.getAll()
+                dashboardService.getStats(filters),
+                dashboardService.getMarketValueDistribution(filters),
+                dashboardService.getContractStatusData(filters),
+                dashboardService.getContractExpiryTimeline(filters),
+                dashboardService.getDealTypeStats(filters),
+                playerService.getAll()
             ]);
+
+            const allPlayers = playersData.players;
 
             setStats(statsData);
             setValueDist(distData);
             setContractStatus(statusData);
             setExpiryTimeline(expiryTimelineMapper(expiryData));
+            // We can also set deal type stats if we add a state for it, 
+            // but the user mostly wants deal stats in the main dashboard and specific indicators.
 
             // Filter players based on selected sport
             const filteredPlayers = selectedSport === 'All'
@@ -99,7 +133,9 @@ export const Reports: FC = () => {
 
             // Process position data with localized names
             const posGroups = filteredPlayers.reduce((acc: any, p: Player) => {
-                const localizedPos = t(`enums.Position.${p.position}`, { defaultValue: p.position });
+                const firstPos = p.positions?.[0];
+                if (!firstPos) return acc;
+                const localizedPos = t(`enums.Position.${firstPos}`, { defaultValue: firstPos });
                 acc[localizedPos] = (acc[localizedPos] || 0) + 1;
                 return acc;
             }, {});
@@ -136,284 +172,437 @@ export const Reports: FC = () => {
     };
 
     const handleExport = (type: 'PDF' | 'Excel') => {
-        message.success(`${type} Report is being generated...`);
+        if (type === 'PDF') {
+            triggerPrint();
+        } else {
+            const exportData = [
+                {
+                    Category: 'Key Stats',
+                    Value: ''
+                },
+                { Category: 'Total Market Value', Value: stats?.totalMarketValue || 0 },
+                { Category: 'Active Contracts', Value: stats?.activeContracts || 0 },
+                { Category: 'Expiring Soon', Value: stats?.expiringSoon || 0 },
+                { Category: 'Total Players', Value: stats?.totalPlayers || 0 },
+                {},
+                { Category: 'Market Value Distribution', Value: '' },
+                ...valueDist.map(v => ({ Category: v.range, Value: v.count })),
+                {},
+                { Category: 'Contract Status', Value: '' },
+                ...contractStatus.map(s => ({ Category: s.status, Value: s.count })),
+            ];
+
+            const sportLabel = selectedSport === 'All' ? 'All' : selectedSport;
+            exportToCSV(exportData, `Admin_Report_${sportLabel}_${new Date().toISOString().split('T')[0]}`);
+        }
     };
 
     return (
-        <div className="fade-in pb-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <Title level={4} className="!m-0 !text-[#C9A24D] !font-black uppercase tracking-tight">{t('admin.reports.indicators')}</Title>
-                    <Text type="secondary" className="text-sm">{t('admin.reports.subtitle')}</Text>
-                </div>
-                <Space wrap size="middle" className="w-full md:w-auto">
-                    <div className="flex flex-col w-full md:w-48">
-                        <Text strong className="text-slate-400 uppercase text-[10px] tracking-widest mb-1">
-                            {t('common.sport')}
-                        </Text>
-                        <Select
-                            className="w-full custom-select"
-                            value={selectedSport}
-                            onChange={setSelectedSport}
-                        >
-                            <Option value="All">{t('common.all_sports')}</Option>
-                            {Object.values(Sport).map(s => (
-                                <Option key={s} value={s}>{t(`enums.Sport.${s}`)}</Option>
-                            ))}
-                        </Select>
-                    </div>
-                    <div className="flex items-end gap-2 w-full md:w-auto">
-                        <Button
-                            icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                            onClick={() => handleExport('PDF')}
-                            className="flex-1 md:flex-none rounded-lg h-10 border-[#C9A24D] text-[#C9A24D] hover:text-[#B68F3F] hover:border-[#B68F3F]"
-                        >
-                            {t('admin.reports.export_pdf')}
-                        </Button>
-                        <Button
-                            type="primary"
-                            icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                            onClick={() => handleExport('Excel')}
-                            className="flex-1 md:flex-none bg-[#C9A24D] hover:bg-[#B68F3F] border-none shadow-md h-10 px-6 rounded-lg font-bold"
-                        >
-                            {t('admin.reports.export_excel')}
-                        </Button>
-                    </div>
-                </Space>
-            </div>
-
-            {/* Top Level Key Stats */}
-            <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
-                        <Statistic
-                            title={<span className="text-slate-500 font-medium">{t('admin.dashboard.market_value').toUpperCase()}</span>}
-                            value={stats?.totalMarketValue || 0}
-                            formatter={(val) => formatCurrency(Number(val), i18n.language)}
-                            prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-green-500 mr-2" />}
-                            valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
-                        <Statistic
-                            title={<span className="text-slate-500 font-medium">{t('admin.dashboard.active_contracts').toUpperCase()}</span>}
-                            value={stats?.activeContracts || 0}
-                            prefix={<FileProtectOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-blue-500 mr-2" />}
-                            valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
-                        <Statistic
-                            title={<span className="text-slate-500 font-medium">{t('admin.dashboard.expiring_soon').toUpperCase()}</span>}
-                            value={stats?.expiringSoon || 0}
-                            prefix={<HistoryOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-orange-500 mr-2" />}
-                            valueStyle={{ color: '#f5222d', fontWeight: 800 }}
-                            suffix={<span className="text-xs font-normal text-slate-400"> (6m)</span>}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                    <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
-                        <Statistic
-                            title={<span className="text-slate-500 font-medium">{t('admin.dashboard.total_players').toUpperCase()}</span>}
-                            value={stats?.totalPlayers || 0}
-                            prefix={<TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#3F3F3F] mr-2" />}
-                            valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
-                        />
-                    </Card>
-                </Col>
-            </Row>
-
-            <Row gutter={[24, 24]}>
-                {/* Market Value Distribution */}
-                <Col xs={24} lg={16}>
-                    <Card
-                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.dashboard.market_dist_title')}</span>}
-                        className="shadow-sm rounded-xl h-full"
-                        extra={<RiseOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-blue-500" />}
-                        loading={loading}
-                    >
-                        <div style={{ height: 350 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={valueDist}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                    <XAxis dataKey="range" axisLine={false} tickLine={false} />
-                                    <YAxis axisLine={false} tickLine={false} />
-                                    <Tooltip
-                                        cursor={{ fill: '#f8fafc' }}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    />
-                                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
-                                    <Bar
-                                        name={t('common.count')}
-                                        dataKey="count"
-                                        fill="#C9A24D"
-                                        radius={[6, 6, 0, 0]}
-                                        barSize={60}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
+        <>
+            {!canViewReports(user) ? (
+                <Result
+                    status="403"
+                    title={t('common.forbidden')}
+                    subTitle={t('common.access_denied', { defaultValue: 'You do not have permission to view reports' })}
+                    extra={<Button type="primary" href="/">{t('common.back_home', { defaultValue: 'Back to Home' })}</Button>}
+                />
+            ) : (
+                <div className="fade-in pb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                        <div>
+                            <Title level={4} className="!m-0 !text-[#C9A24D] !font-black uppercase tracking-tight">{t('admin.reports.indicators')}</Title>
+                            <Text type="secondary" className="text-sm">{t('admin.reports.subtitle')}</Text>
                         </div>
-                    </Card>
-                </Col>
-
-                <Col xs={24} lg={8}>
-                    <Card
-                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.reports.composition')}</span>}
-                        className="shadow-sm rounded-xl h-full"
-                        loading={loading}
-                    >
-                        <div style={{ height: 350 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={positionData}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={screens.xs ? 40 : 60}
-                                        outerRadius={screens.xs ? 70 : 100}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {positionData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip
-                                        contentStyle={{
-                                            borderRadius: '12px',
-                                            border: 'none',
-                                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                            direction: i18n.language === 'ar' ? 'rtl' : 'ltr'
-                                        }}
-                                    />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </div>
-                        <div className="flex flex-wrap justify-center gap-4 mt-2">
-                            {positionData.map((entry, index) => (
-                                <div key={entry.name} className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full me-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                    <span className="text-xs text-slate-500 font-medium uppercase">{entry.name}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                </Col>
-
-                {/* Contract Expiry Timeline */}
-                <Col xs={24}>
-                    <Card
-                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.reports.expiry_timeline')}</span>}
-                        className="shadow-sm rounded-xl"
-                        loading={loading}
-                    >
-                        <div style={{ height: 300 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={expiryTimeline}>
-                                    <defs>
-                                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#C9A24D" stopOpacity={0.1} />
-                                            <stop offset="95%" stopColor="#C9A24D" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                    <XAxis dataKey="displayMonth" axisLine={false} tickLine={false} />
-                                    <YAxis axisLine={false} tickLine={false} />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    />
-                                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
-                                    <Area
-                                        name={t('common.count')}
-                                        type="monotone"
-                                        dataKey="count"
-                                        stroke="#C9A24D"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorCount)"
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </Card>
-                </Col>
-
-                {/* Contract Status Overview */}
-                <Col xs={24} lg={12}>
-                    <Card
-                        title={<span className="text-[#3F3F3F] font-bold">{t('admin.dashboard.contract_status_title')}</span>}
-                        className="shadow-sm rounded-xl h-full"
-                        loading={loading}
-                    >
-                        <div style={{ height: 300 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={contractStatus}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                                    <XAxis
-                                        dataKey="status"
-                                        tickFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
-                                        axisLine={false}
-                                        tickLine={false}
-                                    />
-                                    <YAxis axisLine={false} tickLine={false} />
-                                    <Tooltip
-                                        cursor={{ fill: '#f8fafc' }}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        labelFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
-                                    />
-                                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
-                                    <Bar
-                                        name={t('common.count')}
-                                        dataKey="count"
-                                        fill="#C9A24D"
-                                        radius={[4, 4, 0, 0]}
-                                        barSize={40}
-                                    />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </Card>
-                </Col>
-
-                {/* Key Indicators */}
-                <Col xs={24} lg={12}>
-                    <Card
-                        title={<span className="text-[#C9A24D] font-bold">{t('admin.reports.indicators')}</span>}
-                        className="shadow-sm rounded-xl h-full"
-                        loading={loading}
-                    >
-                        <Space direction="vertical" style={{ width: '100%' }} split={<Divider style={{ margin: '12px 0' }} />}>
-                            <div className="flex justify-between items-center">
-                                <Text strong>{t('admin.reports.market_participation')}</Text>
-                                <Tag color="success" className="font-bold border-none">{t('common.high')}</Tag>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <Text strong>{t('admin.reports.contract_stability')}</Text>
-                                <Text type="secondary">78.5%</Text>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <Text strong>{t('admin.reports.roster_balance')}</Text>
-                                <Text type="secondary">40 / 60</Text>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <Text strong>{t('admin.reports.agency_concentration')}</Text>
-                                <Tag color="warning" className="font-bold border-none">{t('common.medium')}</Tag>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <Text strong>{t('admin.reports.avg_player_value')}</Text>
-                                <Text className="font-bold">
-                                    {stats && stats.totalPlayers > 0 ? formatCurrency(stats.totalMarketValue / stats.totalPlayers, i18n.language) : '$0'}
+                        <Space wrap size="middle" className="w-full xl:w-auto">
+                            <div className="flex flex-col w-full sm:w-48">
+                                <Text strong className="text-slate-400 uppercase text-[10px] tracking-widest mb-1">
+                                    {t('common.sport')}
                                 </Text>
+                                <Select
+                                    className="w-full custom-select"
+                                    value={selectedSport}
+                                    onChange={setSelectedSport}
+                                    showSearch
+                                    optionFilterProp="label"
+                                >
+                                    <Option value="All" label={t('common.all_sports')}>{t('common.all_sports')}</Option>
+                                    {Object.values(Sport).map(s => (
+                                        <Option key={s} value={s} label={t(`enums.Sport.${s}`)}>{t(`enums.Sport.${s}`)}</Option>
+                                    ))}
+                                </Select>
+                            </div>
+                            <div className="flex flex-col w-full sm:w-60">
+                                <Text strong className="text-slate-400 uppercase text-[10px] tracking-widest mb-1">
+                                    {t('common.date_range')}
+                                </Text>
+                                <RangePicker
+                                    className="w-full h-10 rounded-lg"
+                                    value={dateRange}
+                                    onChange={(dates) => setDateRange(dates as any)}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 w-full lg:w-auto mt-2 xl:mt-0">
+                                <Popover
+                                    trigger="click"
+                                    placement="bottomRight"
+                                    title={i18n.language === 'ar' ? 'اختر الحقول للتصدير' : 'Select Export Fields'}
+                                    content={
+                                        <div style={{ maxWidth: 250 }}>
+                                            <Checkbox.Group
+                                                value={selectedFields}
+                                                onChange={(checkedValues) => setSelectedFields(checkedValues as string[])}
+                                                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                                            >
+                                                {allColumnDefs.map(col => (
+                                                    <Checkbox key={col.key} value={col.key}>
+                                                        {col.label}
+                                                    </Checkbox>
+                                                ))}
+                                            </Checkbox.Group>
+                                        </div>
+                                    }
+                                >
+                                    <Button
+                                        icon={<SettingOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                        style={{ borderColor: '#C9A24D', color: '#C9A24D' }}
+                                        className="hover:!border-[#B68F3F] hover:!text-[#B68F3F] flex-1 sm:flex-none h-10 h-10"
+                                    >
+                                        {i18n.language === 'ar' ? 'الحقول' : 'Fields'}
+                                    </Button>
+                                </Popover>
+                                <Button
+                                    icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                    onClick={() => handleExport('PDF')}
+                                    className="flex-1 sm:flex-none rounded-lg h-10 hover:text-[#B68F3F] hover:border-[#B68F3F]"
+                                    style={{ color: '#C9A24D', borderColor: '#C9A24D' }}
+                                >
+                                    {t('admin.reports.export_pdf')}
+                                </Button>
+                                <Button
+                                    type="primary"
+                                    icon={<DownloadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                    onClick={() => handleExport('Excel')}
+                                    className="flex-1 sm:flex-none hover:bg-[#B68F3F] border-none shadow-md h-10 px-6 rounded-lg font-bold"
+                                    style={{ background: '#C9A24D' }}
+                                >
+                                    {t('admin.reports.export_excel')}
+                                </Button>
                             </div>
                         </Space>
-                    </Card>
-                </Col>
-            </Row>
-        </div>
+                    </div>
+
+                    {/* Top Level Key Stats */}
+                    <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.dashboard.market_value').toUpperCase()}</span>}
+                                    value={stats?.totalMarketValue || 0}
+                                    formatter={(val) => formatCurrency(Number(val), i18n.language)}
+                                    prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-green-500 mr-2" />}
+                                    valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.dashboard.active_contracts').toUpperCase()}</span>}
+                                    value={stats?.activeContracts || 0}
+                                    prefix={<FileProtectOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-blue-500 mr-2" />}
+                                    valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.dashboard.expiring_soon').toUpperCase()}</span>}
+                                    value={stats?.expiringSoon || 0}
+                                    prefix={<HistoryOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-orange-500 mr-2" />}
+                                    valueStyle={{ color: '#f5222d', fontWeight: 800 }}
+
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.dashboard.total_players').toUpperCase()}</span>}
+                                    value={stats?.totalPlayers || 0}
+                                    prefix={<TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#3F3F3F] mr-2" />}
+                                    valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
+                                />
+                            </Card>
+                        </Col>
+                    </Row>
+
+                    {/* Analytics Row */}
+                    <div className="mb-4">
+                        <Title level={5} className="!text-slate-400 !font-bold uppercase text-[11px] tracking-widest">{t('admin.dashboard.tabs.members')}</Title>
+                    </div>
+                    <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl border-l-4 border-l-[#C9A24D]" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.members.today_registrations').toUpperCase()}</span>}
+                                    value={stats?.dailyStats?.[stats.dailyStats.length - 1]?.registrations || 0}
+                                    prefix={<HistoryOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#C9A24D] mr-2" />}
+                                    valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl border-l-4 border-l-blue-500" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.members.today_visits').toUpperCase()}</span>}
+                                    value={(stats?.dailyStats?.[stats.dailyStats.length - 1]?.guest || 0) + (stats?.dailyStats?.[stats.dailyStats.length - 1]?.registered || 0)}
+                                    prefix={<RiseOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-blue-500 mr-2" />}
+                                    valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl border-l-4 border-l-green-500" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.members.monthly_visits').toUpperCase()}</span>}
+                                    value={stats?.dailyStats?.reduce((acc, curr) => acc + (curr.guest || 0) + (curr.registered || 0), 0) || 0}
+                                    prefix={<TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-green-500 mr-2" />}
+                                    valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
+                                />
+                            </Card>
+                        </Col>
+                        <Col xs={24} sm={12} lg={6}>
+                            <Card bordered={false} className="shadow-sm rounded-xl border-l-4 border-l-purple-500" loading={loading}>
+                                <Statistic
+                                    title={<span className="text-slate-500 font-medium">{t('admin.dashboard.total_members').toUpperCase()}</span>}
+                                    value={stats?.totalMembers || 0}
+                                    prefix={<TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-purple-500 mr-2" />}
+                                    valueStyle={{ color: '#3F3F3F', fontWeight: 800 }}
+                                />
+                            </Card>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={[24, 24]}>
+                        {/* Market Value Distribution */}
+                        <Col xs={24} lg={16}>
+                            <Card
+                                title={<span className="text-[#3F3F3F] font-bold">{t('admin.dashboard.market_dist_title')}</span>}
+                                className="shadow-sm rounded-xl h-full"
+                                extra={<RiseOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-blue-500" />}
+                                loading={loading}
+                            >
+                                <div style={{ height: 350 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={valueDist}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                            <XAxis dataKey="range" axisLine={false} tickLine={false} />
+                                            <YAxis axisLine={false} tickLine={false} />
+                                            <Tooltip
+                                                cursor={{ fill: '#f8fafc' }}
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                labelFormatter={(label) => label ? t(`admin.dashboard.${label}`, { defaultValue: label }) : ''}
+                                            />
+                                            <Legend
+                                                iconType="circle"
+                                                wrapperStyle={{ paddingTop: '10px' }}
+                                                formatter={(label) => label ? t(`admin.dashboard.${label}`, { defaultValue: label }) : ''}
+                                            />
+                                            <Bar
+                                                name={t('common.count')}
+                                                dataKey="count"
+                                                fill="#C9A24D"
+                                                radius={[6, 6, 0, 0]}
+                                                barSize={60}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </Card>
+                        </Col>
+
+                        <Col xs={24} lg={8}>
+                            <Card
+                                title={<span className="text-[#3F3F3F] font-bold">{t('admin.reports.composition')}</span>}
+                                className="shadow-sm rounded-xl h-full"
+                                loading={loading}
+                            >
+                                <div style={{ height: screens.xs ? 280 : 350 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={positionData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={screens.xs ? 50 : 60}
+                                                outerRadius={screens.xs ? 80 : 100}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {positionData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{
+                                                    borderRadius: '12px',
+                                                    border: 'none',
+                                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                                    direction: i18n.language === 'ar' ? 'rtl' : 'ltr'
+                                                }}
+                                                labelFormatter={(label) => label ? t(`enums.Position.${label}`, { defaultValue: label }) : ''}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-2">
+                                    {positionData.map((entry, index) => (
+                                        <div key={entry.name} className="flex items-center">
+                                            <div className="w-2.5 h-2.5 rounded-full me-2" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase">{entry.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                        </Col>
+
+                        {/* Contract Expiry Timeline */}
+                        <Col xs={24}>
+                            <Card
+                                title={<span className="text-[#3F3F3F] font-bold">{t('admin.reports.expiry_timeline')}</span>}
+                                className="shadow-sm rounded-xl"
+                                loading={loading}
+                            >
+                                <div style={{ height: 300 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={expiryTimeline}>
+                                            <defs>
+                                                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#C9A24D" stopOpacity={0.1} />
+                                                    <stop offset="95%" stopColor="#C9A24D" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                            <XAxis dataKey="displayMonth" axisLine={false} tickLine={false} />
+                                            <YAxis axisLine={false} tickLine={false} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            />
+                                            <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
+                                            <Area
+                                                name={t('common.count')}
+                                                type="monotone"
+                                                dataKey="count"
+                                                stroke="#C9A24D"
+                                                strokeWidth={3}
+                                                fillOpacity={1}
+                                                fill="url(#colorCount)"
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </Card>
+                        </Col>
+
+                        {/* Contract Status Overview */}
+                        <Col xs={24} lg={12}>
+                            <Card
+                                title={<span className="text-[#3F3F3F] font-bold">{t('admin.dashboard.contract_status_title')}</span>}
+                                className="shadow-sm rounded-xl h-full"
+                                loading={loading}
+                            >
+                                <div style={{ height: 300 }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={contractStatus}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                            <XAxis
+                                                dataKey="status"
+                                                tickFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
+                                                axisLine={false}
+                                                tickLine={false}
+                                            />
+                                            <YAxis axisLine={false} tickLine={false} />
+                                            <Tooltip
+                                                cursor={{ fill: '#f8fafc' }}
+                                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                labelFormatter={(val) => t(`enums.ContractStatus.${val}`, { defaultValue: val })}
+                                            />
+                                            <Legend iconType="circle" wrapperStyle={{ paddingTop: '10px' }} />
+                                            <Bar
+                                                name={t('common.count')}
+                                                dataKey="count"
+                                                fill="#C9A24D"
+                                                radius={[4, 4, 0, 0]}
+                                                barSize={40}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </Card>
+                        </Col>
+
+                        {/* Key Indicators */}
+                        <Col xs={24} lg={12}>
+                            <Card
+                                title={<span className="text-[#C9A24D] font-bold">{t('admin.reports.indicators')}</span>}
+                                className="shadow-sm rounded-xl h-full"
+                                loading={loading}
+                            >
+                                <Space direction="vertical" style={{ width: '100%' }} split={<Divider style={{ margin: '12px 0' }} />}>
+                                    <div className="flex justify-between items-center">
+                                        <Text strong>{t('admin.reports.contract_stability')}</Text>
+                                        <Text type="secondary">{stats ? stats.contractStability.toFixed(1) : 0}%</Text>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <Text strong>{t('admin.reports.roster_balance')}</Text>
+                                        <Text type="secondary">{stats?.youthPlayersCount || 0} / {stats?.proPlayersCount || 0}</Text>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <Text strong>{t('admin.reports.agency_concentration')}</Text>
+                                        <Tag color={stats && stats.topAgentConcentration > 50 ? "error" : "success"} className="font-bold border-none uppercase">
+                                            {stats ? (stats.topAgentConcentration > 60 ? t('common.high') : (stats.topAgentConcentration > 30 ? t('common.medium') : t('common.low'))) : '-'}
+                                        </Tag>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <Text strong>{t('admin.reports.avg_player_value')}</Text>
+                                        <Text className="font-bold text-[#3F3F3F]">
+                                            {stats && stats.totalPlayers > 0 ? formatCurrency(stats.totalMarketValue / stats.totalPlayers, i18n.language) : '$0'}
+                                        </Text>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <Text strong>{t('admin.deals.total_deals')}</Text>
+                                        <Text className="font-bold text-[#3F3F3F]">{stats?.totalDeals || 0}</Text>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <Text strong>{t('admin.deals.total_deals_amount')}</Text>
+                                        <Text className="font-bold text-[#C9A24D]">{stats ? formatCurrency(stats.totalDealsAmount, i18n.language) : '$0'}</Text>
+                                    </div>
+                                </Space>
+                            </Card>
+                        </Col>
+                    </Row>
+
+
+                    {/* Hidden Printable Report - Showing Market Value Distribution by default for Admin Report */}
+                    <PrintableReport
+                        title={t('admin.reports.title', { defaultValue: 'Administrative Report' })}
+                        subtitle={`${t('common.sport')}: ${t(`enums.Sport.${selectedSport}`, { defaultValue: selectedSport })}`}
+                        data={valueDist}
+                        columns={[
+                            { title: t('admin.dashboard.range', { defaultValue: 'Range' }), dataIndex: 'range', key: 'range' },
+                            { title: t('common.count'), dataIndex: 'count', key: 'count' }
+                        ].filter(c => selectedFields.includes(c.key))}
+                        summary={[
+                            { label: t('admin.dashboard.total_market_value'), value: formatCurrency(stats?.totalMarketValue || 0, i18n.language) },
+                            { label: t('admin.dashboard.total_players'), value: stats?.totalPlayers || 0 },
+                            { label: t('admin.dashboard.active_contracts'), value: stats?.activeContracts || 0 },
+                            { label: t('admin.deals.total_deals'), value: stats?.totalDeals || 0 },
+                            { label: t('admin.deals.total_deals_amount'), value: formatCurrency(stats?.totalDealsAmount || 0, i18n.language) }
+                        ]}
+                    />
+                </div>
+            )}
+        </>
     );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState, FC, useRef } from 'react';
 import {
   Table,
   Button,
@@ -22,17 +22,29 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextO
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { Contract, ContractStatus } from '../../types';
-import { mockContractApi } from '../../services/mockApi';
-import { formatCurrency, formatDate } from '../../utils/helpers';
+import { contractService } from '../../services/contractService';
+import { playerService } from '../../services/playerService';
+import { agentService } from '../../services/agentService';
+import { formatCurrency, formatDate, normalizeArabic, translateText } from '../../utils/helpers';
 import StatusBadge from '../../components/StatusBadge';
 import showConfirmModal from '../../components/ConfirmModal';
 
 import { useTranslation } from 'react-i18next';
+import DynamicTranslate from '../../components/DynamicTranslate';
+import { useStickyState } from '../../utils/hooks';
+
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
+const isArabicText = (text?: string) => {
+  if (!text) return false;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  return arabicPattern.test(text);
+};
+
 export const Contracts: FC = () => {
   const { t, i18n } = useTranslation();
+  const isAr = i18n.language === 'ar';
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,30 +54,88 @@ export const Contracts: FC = () => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
-  const [searchText, setSearchText] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string | undefined>();
-  const [statusFilter, setStatusFilter] = useState<string | undefined>();
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [searchText, setSearchText] = useStickyState('', 'Admin_Contracts_searchText');
+  const [typeFilter, setTypeFilter] = useStickyState<string | undefined>(undefined, 'Admin_Contracts_typeFilter');
+  const [statusFilter, setStatusFilter] = useStickyState<string | undefined>(undefined, 'Admin_Contracts_statusFilter');
+  const [dateRange, setDateRange] = useStickyState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null, 'Admin_Contracts_dateRange');
+
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useStickyState(1, 'Admin_Contracts_page');
+  const [pageSize, setPageSize] = useStickyState(10, 'Admin_Contracts_pageSize');
+  const isFirstRender = useRef(true);
+  const [players, setPlayers] = useState<any[]>([]);
+  const [agents, setAgents] = useState<any[]>([]);
+  const translateTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
+
+  const handleValuesChange = (changedValues: any) => {
+    if (changedValues.notesAr) {
+      const value = changedValues.notesAr;
+      if (translateTimeouts.current['notesAr']) {
+        clearTimeout(translateTimeouts.current['notesAr']);
+      }
+      translateTimeouts.current['notesAr'] = setTimeout(async () => {
+        if (!value) return;
+        if (!form.getFieldValue('notes')) {
+          const translated = await translateText(value, 'ar', 'en');
+          form.setFieldsValue({ notes: translated });
+        }
+      }, 800);
+    }
+  };
 
   useEffect(() => {
-    loadContracts();
+    if (isFirstRender.current) {
+        isFirstRender.current = false;
+        return;
+    }
+    setPage(1);
+  }, [searchText, typeFilter, statusFilter, dateRange]);
+
+  useEffect(() => {
+    fetchContracts();
+  }, [page, pageSize, searchText, typeFilter, statusFilter, dateRange]);
+
+  useEffect(() => {
+    loadMetadata();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [contracts, searchText, typeFilter, statusFilter, dateRange]);
+  const loadMetadata = async () => {
+    try {
+      const [{ players: playersData }, { agents: agentsData }] = await Promise.all([
+        playerService.getAll(undefined, 1, -1),
+        agentService.getAll({ per_page: -1 })
+      ]);
+      setPlayers(playersData);
+      setAgents(agentsData);
+    } catch (error) {
+      console.error('Failed to load metadata', error);
+    }
+  };
 
-  const loadContracts = async () => {
+  const fetchContracts = async () => {
     setLoading(true);
     try {
-      const data = await mockContractApi.getAll();
+      const params: any = {
+        page,
+        per_page: pageSize,
+        search: searchText,
+        type: typeFilter,
+        status: statusFilter,
+        start_date: dateRange?.[0]?.format('YYYY-MM-DD'),
+        end_date: dateRange?.[1]?.format('YYYY-MM-DD'),
+      };
+      const { data, total: count } = await contractService.getAll(params);
       setContracts(data);
+      setFilteredContracts(data);
+      setTotal(count);
     } catch (error) {
-      message.error('Failed to load contracts');
+      message.error(t('messages.error_load', { defaultValue: 'Failed to load data' }));
     } finally {
       setLoading(false);
     }
   };
+
+  const loadContracts = fetchContracts;
 
   const applyFilters = () => {
     let filtered = [...contracts];
@@ -113,25 +183,28 @@ export const Contracts: FC = () => {
     setEditingContract(contract);
     form.setFieldsValue({
       ...contract,
-      startDate: dayjs(contract.startDate),
-      endDate: dayjs(contract.endDate),
+      startDate: contract.startDate ? dayjs(contract.startDate) : undefined,
+      endDate: contract.endDate ? dayjs(contract.endDate) : undefined,
+      annualSalary: contract.annualSalary || (contract as any).annual_salary,
+      signingBonus: contract.signingBonus || (contract as any).signing_bonus,
+      notesAr: (contract as any).notes_ar || (contract as any).notesAr,
     });
     setModalVisible(true);
   };
 
   const handleDelete = (contract: Contract) => {
     showConfirmModal({
-      title: t('common.delete') + ' ' + t('common.contracts'),
-      content: t('players.delete_player_confirm', { defaultValue: `Are you sure you want to delete the contract for ${contract.playerName}?`, name: contract.playerName }),
+      title: t('messages.confirm_delete_title'),
+      content: t('admin.players.delete_player_confirm', { name: contract.playerName }),
       okText: t('common.delete'),
       okType: 'danger',
       onConfirm: async () => {
         try {
-          await mockContractApi.delete(contract.id);
-          message.success('Contract deleted successfully');
+          await contractService.delete(contract.id);
+          message.success(t('messages.success_delete'));
           loadContracts();
         } catch (error) {
-          message.error('Failed to delete contract');
+          message.error(t('messages.error_delete'));
         }
       },
     });
@@ -142,26 +215,27 @@ export const Contracts: FC = () => {
       const values = await form.validateFields();
       const contractData = {
         ...values,
-        startDate: values.startDate.format('YYYY-MM-DD'),
-        endDate: values.endDate.format('YYYY-MM-DD'),
-        isVisible: false,
-        fileUrl: values.contractFile && values.contractFile.length > 0
-          ? 'https://example.com/mock-contract.pdf'
-          : (editingContract?.fileUrl || null)
+        start_date: values.startDate ? values.startDate.format('YYYY-MM-DD') : undefined,
+        end_date: values.endDate ? values.endDate.format('YYYY-MM-DD') : undefined,
+        annual_salary: values.annualSalary,
+        signing_bonus: values.signingBonus,
+        notes_ar: values.notesAr,
+        currency: 'USD', // Default currency
       };
 
       if (editingContract) {
-        await mockContractApi.update(editingContract.id, contractData);
-        message.success('Contract updated successfully');
+        await contractService.update(editingContract.id, contractData);
+        message.success(t('messages.success_update'));
       } else {
-        await mockContractApi.create(contractData);
-        message.success('Contract created successfully');
+        await contractService.create(contractData);
+        message.success(t('messages.success_save'));
       }
 
       setModalVisible(false);
       loadContracts();
     } catch (error) {
-      message.error('Failed to save contract');
+      console.error('Submission error:', error);
+      message.error(t('messages.error_save'));
     }
   };
 
@@ -172,10 +246,16 @@ export const Contracts: FC = () => {
   const columns: ColumnsType<Contract> = [
     {
       title: t('common.players'),
-      dataIndex: 'playerName',
       key: 'playerName',
       sorter: (a, b) => a.playerName.localeCompare(b.playerName),
-      render: (_, record) => <span className="font-bold text-[#3F3F3F]">{i18n.language === 'ar' && record.playerNameAr ? record.playerNameAr : record.playerName}</span>,
+      render: (_, record) => {
+        const name = isAr ? (record.playerNameAr || record.playerName) : (record.playerName || record.playerNameAr);
+        return (
+          <span className="font-bold text-[#3F3F3F]">
+            <DynamicTranslate text={name} sourceLang={isArabicText(name) ? 'ar' : 'en'} />
+          </span>
+        );
+      },
     },
     {
       title: t('admin.contracts.type_professional', { defaultValue: 'Type' }),
@@ -268,7 +348,7 @@ export const Contracts: FC = () => {
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         {/* Filters Panel */}
         <Card className="border-none shadow-sm rounded-xl overflow-hidden">
-          <Row gutter={[16, 16]} align="middle">
+          <Row gutter={[12, 12]} align="middle">
             <Col xs={24} lg={8}>
               <Input
                 placeholder={t('admin.contracts.search_placeholder')}
@@ -281,20 +361,23 @@ export const Contracts: FC = () => {
             </Col>
             <Col xs={12} sm={8} lg={4}>
               <Select
+                showSearch
                 placeholder={t('admin.contracts.type_professional', { defaultValue: 'Type' })}
                 className="w-full h-11"
                 allowClear
                 value={typeFilter}
                 onChange={setTypeFilter}
                 options={[
-                  { value: 'Professional', label: t('admin.contracts.type_professional', { defaultValue: 'Professional' }) },
-                  { value: 'Youth', label: t('admin.contracts.type_youth', { defaultValue: 'Youth' }) },
-                  { value: 'Loan', label: t('admin.contracts.type_loan', { defaultValue: 'Loan' }) },
+                  { value: 'PROFESSIONAL', label: t('admin.contracts.type_professional', { defaultValue: 'Professional' }) },
+                  { value: 'YOUTH', label: t('admin.contracts.type_youth', { defaultValue: 'Youth' }) },
+                  { value: 'LOAN', label: t('admin.contracts.type_loan', { defaultValue: 'Loan' }) },
                 ]}
+                optionFilterProp="label"
               />
             </Col>
             <Col xs={12} sm={8} lg={4}>
               <Select
+                showSearch
                 placeholder={t('common.status')}
                 className="w-full h-11"
                 allowClear
@@ -304,6 +387,7 @@ export const Contracts: FC = () => {
                   value: status,
                   label: t(`enums.ContractStatus.${status}`, { defaultValue: status }),
                 }))}
+                optionFilterProp="label"
               />
             </Col>
             <Col xs={24} sm={8} lg={6}>
@@ -315,12 +399,12 @@ export const Contracts: FC = () => {
               />
             </Col>
             {isFiltered && (
-              <Col xs={24} lg={2} className="text-right">
+              <Col xs={24} lg={2} className="text-center lg:text-right">
                 <Button
                   type="link"
                   danger
                   onClick={clearFilters}
-                  className="font-bold flex items-center justify-end w-full"
+                  className="font-bold flex items-center justify-center lg:justify-end w-full"
                 >
                   {t('common.cancel')}
                 </Button>
@@ -333,12 +417,18 @@ export const Contracts: FC = () => {
         <Card>
           <Table
             columns={columns}
-            dataSource={filteredContracts}
+            dataSource={contracts}
             loading={loading}
             rowKey="id"
             scroll={{ x: 1000 }}
             pagination={{
-              pageSize: 10,
+              current: page,
+              pageSize: pageSize,
+              total: total,
+              onChange: (p, ps) => {
+                setPage(p);
+                setPageSize(ps);
+              },
               showSizeChanger: true,
               showTotal: (total) => `${t('common.total')}: ${total} ${t('common.contracts').toLowerCase()}`,
             }}
@@ -356,59 +446,84 @@ export const Contracts: FC = () => {
         okText={t('common.save')}
         cancelText={t('common.cancel')}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
           <Form.Item
-            name="playerName"
+            name="player_id"
             label={t('admin.contracts.player_name')}
             rules={[{ required: true, message: t('admin.contracts.player_select') }]}
           >
-            <Input placeholder="e.g., Mohamed Salah" />
+            <Select
+              placeholder={t('admin.contracts.player_select')}
+              showSearch
+              filterOption={(input, option) => {
+                const normalizedInput = normalizeArabic(input).toLowerCase();
+                const normalizedLabel = normalizeArabic(String(option?.label ?? '')).toLowerCase();
+                return normalizedLabel.startsWith(normalizedInput);
+              }}
+              options={players.map(p => ({
+                value: p.id,
+                label: `${i18n.language === 'ar' && p.nameAr ? p.nameAr : p.name} - ${p.club || ''}`
+              }))}
+            />
           </Form.Item>
 
           <Form.Item
-            name="nationalId"
-            label={t('common.national_id')}
-            rules={[{ required: true, message: t('common.national_id') + ' is required' }]}
+            name="agent_id"
+            label={t('common.agent', { defaultValue: 'Agent' })}
           >
-            <Input placeholder="e.g., 2900101..." />
+            <Select
+              placeholder={t('common.agent')}
+              allowClear
+              showSearch
+              filterOption={(input, option) => {
+                const normalizedInput = normalizeArabic(input).toLowerCase();
+                const normalizedLabel = normalizeArabic(String(option?.label ?? '')).toLowerCase();
+                return normalizedLabel.startsWith(normalizedInput);
+              }}
+              options={agents.map(a => ({
+                value: a.id,
+                label: i18n.language === 'ar' && a.nameAr ? a.nameAr : a.name
+              }))}
+            />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
+          <Row gutter={[12, 0]}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="type"
                 label={t('admin.contracts.type_professional', { defaultValue: 'Contract Type' })}
                 rules={[{ required: true }]}
               >
                 <Select
+                  showSearch
                   placeholder={t('admin.contracts.type_professional', { defaultValue: 'Contract Type' })}
                   options={[
-                    { value: 'Professional', label: t('admin.contracts.type_professional', { defaultValue: 'Professional' }) },
-                    { value: 'Youth', label: t('admin.contracts.type_youth', { defaultValue: 'Youth' }) },
-                    { value: 'Loan', label: t('admin.contracts.type_loan', { defaultValue: 'Loan' }) },
+                    { value: 'PROFESSIONAL', label: t('admin.contracts.type_professional', { defaultValue: 'Professional' }) },
+                    { value: 'YOUTH', label: t('admin.contracts.type_youth', { defaultValue: 'Youth' }) },
+                    { value: 'LOAN', label: t('admin.contracts.type_loan', { defaultValue: 'Loan' }) },
                   ]}
+                  optionFilterProp="label"
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="status"
                 label={t('common.status')}
                 rules={[{ required: true }]}
               >
                 <Select
+                  showSearch
                   placeholder={t('common.status')}
                   options={Object.values(ContractStatus).map(status => ({
                     value: status,
                     label: t(`enums.ContractStatus.${status}`, { defaultValue: status }),
                   }))}
+                  optionFilterProp="label"
                 />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={12} sm={12}>
               <Form.Item
                 name="startDate"
                 label={t('admin.contracts.start_date')}
@@ -417,7 +532,7 @@ export const Contracts: FC = () => {
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={12} sm={12}>
               <Form.Item
                 name="endDate"
                 label={t('admin.contracts.end_date')}
@@ -426,10 +541,7 @@ export const Contracts: FC = () => {
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={12} sm={12}>
               <Form.Item
                 name="annualSalary"
                 label={t('admin.contracts.salary')}
@@ -443,7 +555,7 @@ export const Contracts: FC = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={12} sm={12}>
               <Form.Item
                 name="signingBonus"
                 label={t('admin.contracts.signing_bonus')}
@@ -456,44 +568,42 @@ export const Contracts: FC = () => {
                 />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="notes" label={t('admin.contracts.notes')}>
-                <Input.TextArea rows={3} placeholder="Additional notes (English)..." />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
+            <Col xs={24} sm={12}>
               <Form.Item name="notesAr" label={t('admin.contracts.notes') + ' (عربي)'}>
-                <Input.TextArea rows={3} placeholder="ملاحظات إضافية (بالعربي)..." />
+                <Input.TextArea rows={2} placeholder="ملاحظات إضافية (بالعربي)..." />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item name="notes" label={t('admin.contracts.notes')}>
+                <Input.TextArea rows={2} placeholder="Additional notes (English)..." />
+              </Form.Item>
+            </Col>
+            <Col xs={24}>
+              <Form.Item
+                name="contractFile"
+                label={t('admin.contracts.upload_btn')}
+                valuePropName="fileList"
+                getValueFromEvent={(e) => {
+                  if (Array.isArray(e)) return e;
+                  return e?.fileList;
+                }}
+              >
+                <Upload
+                  name="contract"
+                  listType="text"
+                  maxCount={1}
+                  beforeUpload={() => false}
+                >
+                  <Button
+                    icon={<UploadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                    className="w-full flex items-center justify-center h-11 border-dashed"
+                  >
+                    {t('admin.contracts.upload_btn')}
+                  </Button>
+                </Upload>
               </Form.Item>
             </Col>
           </Row>
-
-          <Form.Item
-            name="contractFile"
-            label={t('admin.contracts.upload_btn')}
-            valuePropName="fileList"
-            getValueFromEvent={(e) => {
-              if (Array.isArray(e)) return e;
-              return e?.fileList;
-            }}
-          >
-            <Upload
-              name="contract"
-              listType="text"
-              maxCount={1}
-              beforeUpload={() => false}
-            >
-              <Button
-                icon={<UploadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                className="w-full flex items-center justify-center h-11 border-dashed"
-              >
-                {t('admin.contracts.upload_btn')}
-              </Button>
-            </Upload>
-          </Form.Item>
         </Form>
       </Modal>
     </div>

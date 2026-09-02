@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /agent/
+Disallow: /profile/
+Disallow: /access-restricted
+
+Sitemap: https://ashkananitransfer.com/sitemap.xml

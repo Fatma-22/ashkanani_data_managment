@@ -23,7 +23,7 @@ const showConfirmModal = ({
 }: ConfirmModalProps) => {
     Modal.confirm({
         title,
-        icon: <ExclamationCircleOutlined />,
+        icon: <ExclamationCircleOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />,
         content,
         okText,
         cancelText,

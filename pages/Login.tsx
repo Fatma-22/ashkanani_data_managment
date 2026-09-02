@@ -10,13 +10,14 @@ import {
   GlobalOutlined,
   SafetyCertificateOutlined
 } from '@ant-design/icons';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 import { useTranslation } from 'react-i18next';
 
 export const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -35,40 +36,48 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const { email, password, role } = values;
-
-      // Basic mock validation
-      if (password.length < 4) {
-        throw new Error('Password must be at least 4 characters');
-      }
-
-      login(role, email, password);
-
-      if (role === UserRole.OWNER) {
-        navigate('/owner');
-      } else if (role === UserRole.ADMIN) {
-        navigate('/admin');
-      } else if (role === UserRole.AGENT) {
-        navigate('/agent');
+      const { email, password } = values;
+      const loggedInUser = await login(email, password);
+      if (loggedInUser) {
+        const r = loggedInUser.role as string;
+        if (r === 'OWNER') navigate('/owner');
+        else if (r === 'ADMIN') navigate('/admin');
+        else if (r === 'AGENT') navigate('/agent');
+        else navigate('/players');
       }
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === UserRole.OWNER) {
+        navigate('/owner');
+      } else if (user.role === UserRole.ADMIN) {
+        navigate('/admin');
+      } else if (user.role === UserRole.AGENT) {
+        navigate('/agent');
+      } else {
+        navigate('/players');
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+
   const handlePublicAccess = () => {
-    login(UserRole.PUBLIC);
     navigate('/players');
   };
 
   if (showSplash) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#3F3F3F]">
+        {/* Language Switcher Header */}
+        <div className="absolute top-0 right-0 p-4 md:p-6 z-50">
+          <LanguageSwitcher />
+        </div>
+
         <style>
           {`
             @keyframes pulse-gold {
@@ -100,6 +109,11 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden animate-fade-in" style={{ background: '#3F3F3F' }}>
+      {/* Language Switcher Header */}
+      <div className="absolute top-0 right-0 p-4 md:p-6 z-50">
+        <LanguageSwitcher />
+      </div>
+
       {/* Background decorative elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full opacity-10 bg-gold-500 blur-[100px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full opacity-10 bg-blue-400 blur-[100px]"></div>
@@ -108,7 +122,7 @@ export const Login: React.FC = () => {
 
       <Card
         className="w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-2xl border-0 overflow-hidden relative z-10"
-        bodyStyle={{ padding: '40px 32px' }}
+        styles={{ body: { padding: '40px 32px' } }}
       >
         <div className="text-center mb-10">
           <Title level={2} className="!m-0 !text-3xl !font-black tracking-tight" style={{ color: '#3F3F3F' }}>
@@ -134,7 +148,6 @@ export const Login: React.FC = () => {
         <Form
           name="login_form"
           layout="vertical"
-          initialValues={{ role: UserRole.AGENT }}
           onFinish={onFinish}
           autoComplete="off"
           size="large"
@@ -166,17 +179,7 @@ export const Login: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item
-            label={t('login.portal_label', { defaultValue: 'Access Portal' })}
-            name="role"
-            rules={[{ required: true, message: t('login.portal_required', { defaultValue: 'Please select a portal' }) }]}
-          >
-            <Select className="rounded-lg h-12">
-              <Option value={UserRole.OWNER}>{t('roles.owner', { defaultValue: 'Owner' })}</Option>
-              <Option value={UserRole.ADMIN}>{t('roles.admin', { defaultValue: 'Administrator' })}</Option>
-              <Option value={UserRole.AGENT}>{t('roles.agent', { defaultValue: 'Certified Agent' })}</Option>
-            </Select>
-          </Form.Item>
+
 
           <Form.Item className="mt-8 mb-4">
             <Button
@@ -191,6 +194,16 @@ export const Login: React.FC = () => {
               {t('login.login_btn')}
             </Button>
           </Form.Item>
+
+          <div className="text-center mb-4">
+            <Button 
+              type="link" 
+              onClick={() => navigate('/register')}
+              className="text-gold-500 font-medium"
+            >
+              {t('register.title')}
+            </Button>
+          </div>
 
           <Divider plain>{t('login.secure_access_label', { defaultValue: 'Secure Access' })}</Divider>
 

@@ -1,0 +1,23 @@
+﻿utils/logoBase64.ts(1,31): error TS1005: ',' expected.
+utils/logoBase64.ts(1,37): error TS1005: ',' expected.
+utils/logoBase64.ts(1,499): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,867): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,2891): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,4020): error TS1124: Digit expected.
+utils/logoBase64.ts(1,4492): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,4639): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,4675): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,4749): error TS1005: ';' expected.
+utils/logoBase64.ts(1,4751): error TS1124: Digit expected.
+utils/logoBase64.ts(1,4751): error TS1005: ';' expected.
+utils/logoBase64.ts(1,4989): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,5070): error TS1005: ';' expected.
+utils/logoBase64.ts(1,5099): error TS1005: ';' expected.
+utils/logoBase64.ts(1,5101): error TS1005: ';' expected.
+utils/logoBase64.ts(1,5101): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,5258): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,5286): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,5363): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,5421): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,5616): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+utils/logoBase64.ts(1,5776): error TS1109: Expression expected.

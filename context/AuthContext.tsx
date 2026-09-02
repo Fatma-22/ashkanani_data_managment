@@ -1,34 +1,79 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { User, UserRole } from '../types';
-import { MOCK_USERS } from '../services/mockData';
+import apiClient from '../services/api';
 
 interface AuthContextType {
   user: User | null;
-  login: (role: UserRole, email?: string, password?: string) => void;
+  login: (email: string, password: string, role?: string) => Promise<User | null>;
+  register: (userData: any) => Promise<User | null>;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (role: UserRole, email?: string, password?: string) => {
-    // Simulate login
-    if (role === UserRole.PUBLIC) {
-      setUser({ id: 'guest', name: 'Guest User', email: 'guest@example.com', role: UserRole.PUBLIC });
-    } else {
-      // In a real app, we would validate email/password here
-      const foundUser = MOCK_USERS.find((u) => u.role === role);
-      setUser(foundUser || { id: 'temp', name: email || 'User', email: email || 'user@example.com', role });
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response: any = await apiClient.get('/me');
+          if (response.success) {
+            if (response.data.isActive === false) {
+              localStorage.removeItem('token');
+              setUser(null);
+            } else {
+              setUser(response.data);
+            }
+          }
+        } catch (error) {
+          localStorage.removeItem('token');
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  const login = async (email: string, password: string, role?: string): Promise<User | null> => {
+    const payload: any = { email, password };
+    if (role) payload.role = role;
+    const response: any = await apiClient.post('/login', payload);
+    if (response.success) {
+      const userData: User = response.data.user;
+      localStorage.setItem('token', response.data.access_token || response.data.token);
+      setUser(userData);
+      return userData;
     }
+    return null;
   };
 
-  const logout = () => {
-    setUser(null);
+  const register = async (userData: any): Promise<User | null> => {
+    const response: any = await apiClient.post('/register', userData);
+    if (response.success) {
+      const registeredUser: User = response.data.user;
+      localStorage.setItem('token', response.data.access_token || response.data.token);
+      setUser(registeredUser);
+      return registeredUser;
+    }
+    return null;
+  };
+
+  const logout = async () => {
+    try {
+      await apiClient.post('/logout');
+    } finally {
+      localStorage.removeItem('token');
+      setUser(null);
+    }
   };
 
   const updateUser = (updates: Partial<User>) => {
@@ -36,8 +81,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: !!user }}>
-      {children}
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser, isAuthenticated: !!user, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

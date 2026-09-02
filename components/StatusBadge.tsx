@@ -29,7 +29,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, type = 'contract' }) 
     return undefined; // We use custom styles exclusively
   };
 
-  const translatedStatus = t(`enums.${type === 'deal' ? 'DealStatus' : 'ContractStatus'}.${status}`, { defaultValue: status });
+  const translatedStatus = t(`enums.${type === 'deal' ? 'DealStatus' : 'ContractStatus'}.${typeof status === 'string' ? status.toUpperCase() : status}`, { defaultValue: status });
 
   return (
     <Tag
