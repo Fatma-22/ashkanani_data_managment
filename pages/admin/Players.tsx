@@ -105,14 +105,14 @@ export const Players: FC = () => {
   const [allFilteredPlayers, setAllFilteredPlayers] = useState<Player[]>([]);
   const [isFetchingAll, setIsFetchingAll] = useState(false);
 
-  const isFirstRender = useRef(true);
+  const prevDeps = useRef(JSON.stringify({ activeTab, filters, pageSize }));
 
   useEffect(() => {
-    if (isFirstRender.current) {
-        isFirstRender.current = false;
-        return;
+    const currentDeps = JSON.stringify({ activeTab, filters, pageSize });
+    if (prevDeps.current !== currentDeps) {
+        setPage(1);
+        prevDeps.current = currentDeps;
     }
-    setPage(1);
   }, [activeTab, filters, pageSize]);
 
   useEffect(() => {
