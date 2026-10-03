@@ -124,9 +124,9 @@ export const Players: FC = () => {
     try {
       const queryFilters = {
         ...filters,
-        // When contractNature is active, skip contractStatus so the nature filter works across tabs
-        // (e.g. TERMINATION players are excluded from ACTIVE status in the backend)
-        contractStatus: (filters.contractNature && filters.contractNature.length > 0 || activeTab === 'ALL') 
+        // Always enforce the tab's status filter so we don't mix active and expired
+        // players even if they are filtering by contractNature (like AUTHORIZATION)
+        contractStatus: activeTab === 'ALL'
           ? undefined 
           : (activeTab === 'ACTIVE' 
             ? [ContractStatus.ACTIVE, ContractStatus.PENDING, ContractStatus.NEGOTIATION] 
@@ -149,7 +149,8 @@ export const Players: FC = () => {
     try {
       const queryFilters = {
         ...filters,
-        contractStatus: (filters.contractNature && filters.contractNature.length > 0 || activeTab === 'ALL') 
+        // Always enforce the tab's status filter for PDF export as well
+        contractStatus: activeTab === 'ALL'
           ? undefined 
           : (activeTab === 'ACTIVE' 
             ? [ContractStatus.ACTIVE, ContractStatus.PENDING, ContractStatus.NEGOTIATION] 
