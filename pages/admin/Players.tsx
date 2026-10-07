@@ -261,7 +261,7 @@ export const Players: FC = () => {
           },
           {
             key: 'AUTHORIZATION',
-            label: t('players.authorization_tab', { defaultValue: 'المنتسبين للتفويض' }),
+            label: t('players.authorization_tab'),
           },
         ]}
       />

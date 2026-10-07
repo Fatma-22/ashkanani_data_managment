@@ -233,17 +233,44 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                                 && player.role !== ProfileRole.DESIGNER
                                 && player.role !== ProfileRole.REFEREE
                                 && player.role !== ProfileRole.PHOTOGRAPHER
-                                && (player.contractNature === 'SIGNING' || player.contractNature === 'AUTHORIZATION')
-                                && (!player.contractStartDate || !player.contractEndDate) && (
-                                <Tooltip title={t('players.missing_contract_dates', { defaultValue: 'This athlete has no contract start/end date set.' })}>
-                                    <div className="mt-1 px-2 py-0.5 bg-amber-50 rounded-lg inline-flex items-center gap-1 border border-amber-300">
-                                        <WarningFilled style={{ color: '#d97706', fontSize: 9 }} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
-                                        <Text className="text-amber-700 font-bold text-[8px] uppercase tracking-wider">
-                                            {t('players.no_contract_dates_short', { defaultValue: 'No contract dates' })}
-                                        </Text>
-                                    </div>
-                                </Tooltip>
-                            )}
+                                && player.contractNature !== 'NOT_JOINED'
+                                && (() => {
+                                    const startDate = player.contractStartDate || (player as any).contract_start_date;
+                                    const endDate = player.contractEndDate || (player as any).contract_end_date;
+                                    const hasStart = Boolean(startDate);
+                                    const hasEnd = Boolean(endDate);
+                                    const isExpired = hasEnd && new Date(endDate as string) < new Date();
+
+                                    // No dates at all → signing date / contract period missing
+                                    if (!hasStart && !hasEnd) {
+                                        const label = player.contractNature === 'AUTHORIZATION'
+                                            ? t('players.no_contract_period')
+                                            : t('players.no_contract_signing_date');
+                                        return (
+                                            <Tooltip title={label}>
+                                                <div className="mt-1 px-2 py-0.5 bg-amber-50 rounded-lg inline-flex items-center gap-1 border border-amber-300">
+                                                    <WarningFilled style={{ color: '#d97706', fontSize: 9 }} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
+                                                    <Text className="text-amber-700 font-bold text-[8px] uppercase tracking-wider">
+                                                        {label}
+                                                    </Text>
+                                                </div>
+                                            </Tooltip>
+                                        );
+                                    }
+
+                                    // Has a contract that already ended → contract expired
+                                    if (isExpired) {
+                                        return (
+                                            <div className="mt-1 px-2 py-0.5 bg-red-50 rounded-lg inline-flex items-center gap-1 border border-red-300">
+                                                <Text className="text-red-600 font-bold text-[8px] uppercase tracking-wider">
+                                                    {t('players.contract_expired_badge')}
+                                                </Text>
+                                            </div>
+                                        );
+                                    }
+
+                                    return null;
+                                })()}
                         </div>
 
                         {showActions && (onEdit || onDelete || player.cvUrl) && (

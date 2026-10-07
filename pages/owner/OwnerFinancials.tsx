@@ -59,6 +59,7 @@ export const OwnerFinancials: React.FC = () => {
     const [form] = Form.useForm();
     const formCurrency = Form.useWatch('currency', form) || 'USD';
     const formCurrencySymbol = getCurrencySymbol(formCurrency);
+    const formType = Form.useWatch('type', form);
     const [invoiceFile, setInvoiceFile] = useState<any>(null);
     const [removeInvoice, setRemoveInvoice] = useState(false);
 
@@ -761,7 +762,8 @@ export const OwnerFinancials: React.FC = () => {
                                             <InputNumber
                                                 style={{ width: '100%' }}
                                                 placeholder={t('owner.financials.amount_placeholder')}
-                                                formatter={(value) => `${formCurrencySymbol} ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                prefix={formCurrencySymbol}
+                                                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                                                 parser={(value) => value!.replace(/[^\d.]/g, '')}
                                             />
                                         </Form.Item>
@@ -812,6 +814,7 @@ export const OwnerFinancials: React.FC = () => {
                                     <Input placeholder={t('owner.financials.related_to_placeholder')} />
                                 </Form.Item>
 
+                                {formType !== 'arrears' && (
                                 <Form.Item
                                     label={t('owner.financials.invoice', { defaultValue: 'Payment Invoice (PDF/Image)' })}
                                 >
@@ -863,6 +866,7 @@ export const OwnerFinancials: React.FC = () => {
                                         </Button>
                                     </Upload>
                                 </Form.Item>
+                                )}
                             </Form>
                         </Modal>
 

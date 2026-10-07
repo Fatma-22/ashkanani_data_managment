@@ -47,7 +47,7 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
             const data = await playerService.getPayments(playerId);
             setPayments(Array.isArray(data) ? data : []);
         } catch (error) {
-            message.error(t('player_payments.load_error', { defaultValue: 'Failed to load payments' }));
+            message.error(t('player_payments.load_error'));
         } finally {
             setLoading(false);
         }
@@ -96,10 +96,10 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
     const handleDelete = async (record: PlayerPayment) => {
         try {
             await playerService.deletePayment(playerId, record.id);
-            message.success(t('common.success_delete', { defaultValue: 'Deleted successfully' }));
+            message.success(t('messages.success_delete'));
             loadPayments();
         } catch (error) {
-            message.error(t('common.error_delete', { defaultValue: 'Failed to delete' }));
+            message.error(t('messages.error_delete'));
         }
     };
 
@@ -125,10 +125,10 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
 
             if (editing) {
                 await playerService.updatePayment(playerId, editing.id, fd);
-                message.success(t('common.success_update', { defaultValue: 'Updated successfully' }));
+                message.success(t('messages.success_update'));
             } else {
                 await playerService.createPayment(playerId, fd);
-                message.success(t('common.success_save', { defaultValue: 'Saved successfully' }));
+                message.success(t('messages.success_save'));
             }
 
             setModalVisible(false);
@@ -137,7 +137,7 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
             loadPayments();
         } catch (error: any) {
             if (error?.errorFields) return; // validation error
-            message.error(t('common.error_save', { defaultValue: 'Failed to save' }));
+            message.error(t('messages.error_save'));
         } finally {
             setSaving(false);
         }
@@ -282,12 +282,12 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                     <Row gutter={16}>
                         <Col span={8}>
                             <Form.Item name="total_amount" label={t('player_payments.total', { defaultValue: 'Total Amount' })} rules={[{ required: true }]}>
-                                <InputNumber style={{ width: '100%' }} min={0} formatter={(v) => `${symbol} ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(v) => v!.replace(/[^\d.]/g, '')} />
+                                <InputNumber style={{ width: '100%' }} min={0} prefix={symbol} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(v) => v!.replace(/[^\d.]/g, '')} />
                             </Form.Item>
                         </Col>
                         <Col span={8}>
                             <Form.Item name="paid_amount" label={t('player_payments.paid', { defaultValue: 'Paid Amount' })}>
-                                <InputNumber style={{ width: '100%' }} min={0} formatter={(v) => `${symbol} ${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(v) => v!.replace(/[^\d.]/g, '')} />
+                                <InputNumber style={{ width: '100%' }} min={0} prefix={symbol} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')} parser={(v) => v!.replace(/[^\d.]/g, '')} />
                             </Form.Item>
                         </Col>
                         <Col span={8}>
