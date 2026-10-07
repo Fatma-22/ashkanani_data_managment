@@ -119,19 +119,37 @@ export const Players: FC = () => {
     fetchPlayers();
   }, [filters, page, pageSize, activeTab]);
 
+  const buildTabFilters = () => {
+    if (activeTab === 'AUTHORIZATION') {
+      // Authorization members are an isolated category: show only them,
+      // independent of active/expired contract status.
+      return {
+        ...filters,
+        contractNature: ['AUTHORIZATION'] as any,
+        contractStatus: undefined,
+      };
+    }
+
+    // ALL / ACTIVE / EXPIRED: exclude self-registered (NOT_JOINED) and
+    // authorization members so they don't leak into the athletes search.
+    const excludeContractNature = ['NOT_JOINED', 'AUTHORIZATION'];
+    return {
+      ...filters,
+      // Don't let the search filters re-introduce an authorization filter here
+      contractNature: filters.contractNature?.filter((n: string) => n !== 'AUTHORIZATION'),
+      excludeContractNature,
+      contractStatus: activeTab === 'ALL'
+        ? undefined
+        : (activeTab === 'ACTIVE'
+          ? [ContractStatus.ACTIVE, ContractStatus.PENDING, ContractStatus.NEGOTIATION]
+          : [ContractStatus.EXPIRED]),
+    };
+  };
+
   const fetchPlayers = async () => {
     setLoading(true);
     try {
-      const queryFilters = {
-        ...filters,
-        // Always enforce the tab's status filter so we don't mix active and expired
-        // players even if they are filtering by contractNature (like AUTHORIZATION)
-        contractStatus: activeTab === 'ALL'
-          ? undefined 
-          : (activeTab === 'ACTIVE' 
-            ? [ContractStatus.ACTIVE, ContractStatus.PENDING, ContractStatus.NEGOTIATION] 
-            : [ContractStatus.EXPIRED])
-      };
+      const queryFilters = buildTabFilters();
       const { players: data, total: count } = await playerService.getAll(queryFilters, page, pageSize);
       setPlayers(data);
       setTotal(count);
@@ -147,15 +165,7 @@ export const Players: FC = () => {
   const fetchAllForPdf = async () => {
     setIsFetchingAll(true);
     try {
-      const queryFilters = {
-        ...filters,
-        // Always enforce the tab's status filter for PDF export as well
-        contractStatus: activeTab === 'ALL'
-          ? undefined 
-          : (activeTab === 'ACTIVE' 
-            ? [ContractStatus.ACTIVE, ContractStatus.PENDING, ContractStatus.NEGOTIATION] 
-            : [ContractStatus.EXPIRED])
-      };
+      const queryFilters = buildTabFilters();
       const { players: data } = await playerService.getAll(queryFilters, 1, 10000); // Fetch max (10000)
       setAllFilteredPlayers(data);
       setPdfModalVisible(true);
@@ -248,6 +258,10 @@ export const Players: FC = () => {
           {
             key: 'EXPIRED',
             label: t('players.archive_tab'),
+          },
+          {
+            key: 'AUTHORIZATION',
+            label: t('players.authorization_tab', { defaultValue: 'المنتسبين للتفويض' }),
           },
         ]}
       />

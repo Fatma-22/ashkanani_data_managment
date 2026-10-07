@@ -293,6 +293,13 @@ export const filterPlayers = (players: Player[], filters: PlayerFilters, contrac
     });
 };
 
+export const getCurrencySymbol = (currency: string = 'USD'): string => {
+    const currencyCode = (currency.length === 2 || currency.includes('-')) ? 'USD' : (currency || 'USD').toUpperCase();
+    if (currencyCode === 'KWD') return 'KD';
+    if (currencyCode === 'EUR') return '€';
+    return '$';
+};
+
 export const formatCurrency = (value: number | string, currency: string = 'USD', exact: boolean = false): string => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     if (isNaN(numValue) || !isFinite(numValue)) return '$0';

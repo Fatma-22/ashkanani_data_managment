@@ -18,6 +18,12 @@ export const ownerService = {
     },
 
     updateFinancialRecord: async (id: string | number, data: any): Promise<any> => {
+        // Laravel cannot parse multipart PUT bodies, so send FormData via POST with method override
+        if (typeof FormData !== 'undefined' && data instanceof FormData) {
+            data.append('_method', 'PUT');
+            const response: any = await apiClient.post(`/owner/financials/${id}`, data);
+            return response.data;
+        }
         const response: any = await apiClient.put(`/owner/financials/${id}`, data);
         return response.data;
     },

@@ -487,6 +487,7 @@ export interface PlayerFilters {
 
   contractType?: ('PROFESSIONAL' | 'YOUTH' | 'LOAN' | 'AMATEUR')[];
   contractNature?: ('AUTHORIZATION' | 'SIGNING')[];
+  excludeContractNature?: string[];
   contractStatus?: ContractStatus[];
   agentId?: string;
   start_date?: string;
@@ -559,6 +560,24 @@ export interface Admin {
 }
 
 // Financial Management Types
+export interface PlayerPayment {
+  id: number | string;
+  player_id?: number | string;
+  title?: string;
+  total_amount: number | string;
+  paid_amount: number | string;
+  remaining_amount?: number | string;
+  currency: string;
+  due_date?: string;
+  payment_date?: string;
+  status?: string;
+  receipt_path?: string;
+  receipt_url?: string;
+  notes?: string;
+  created_by?: string | number;
+  created_at?: string;
+}
+
 export interface FinancialRecord {
   id: string;
   type: 'income' | 'expense' | 'arrears';
@@ -571,6 +590,8 @@ export interface FinancialRecord {
   date: string;
   related_to?: string;
   related_type?: 'player' | 'agent' | 'employee';
+  invoice_url?: string;
+  invoice_path?: string;
   created_by: string;
   createdAt: string;
 }
@@ -632,6 +653,7 @@ export interface Deal {
   contractStartDate?: string | null;
   contractEndDate?: string | null;
   contractUrl?: string | null;
+  imageUrl?: string | null;
   gallery_image_urls?: string[] | null;
   amount: number | null;
   currency: string | null;

@@ -10,7 +10,8 @@ import {
     CheckCircleFilled,
     ThunderboltFilled,
     TrophyFilled,
-    FilePdfOutlined
+    FilePdfOutlined,
+    WarningFilled
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Flag from 'react-world-flags';
@@ -227,6 +228,21 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                                         {t(`enums.ContractNature.${player.contractNature || 'SIGNING'}`)}
                                     </Text>
                                 </div>
+                            )}
+                            {isAdmin
+                                && player.role !== ProfileRole.DESIGNER
+                                && player.role !== ProfileRole.REFEREE
+                                && player.role !== ProfileRole.PHOTOGRAPHER
+                                && (player.contractNature === 'SIGNING' || player.contractNature === 'AUTHORIZATION')
+                                && (!player.contractStartDate || !player.contractEndDate) && (
+                                <Tooltip title={t('players.missing_contract_dates', { defaultValue: 'This athlete has no contract start/end date set.' })}>
+                                    <div className="mt-1 px-2 py-0.5 bg-amber-50 rounded-lg inline-flex items-center gap-1 border border-amber-300">
+                                        <WarningFilled style={{ color: '#d97706', fontSize: 9 }} onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
+                                        <Text className="text-amber-700 font-bold text-[8px] uppercase tracking-wider">
+                                            {t('players.no_contract_dates_short', { defaultValue: 'No contract dates' })}
+                                        </Text>
+                                    </div>
+                                </Tooltip>
                             )}
                         </div>
 

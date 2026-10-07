@@ -17,6 +17,7 @@ interface DealModalProps {
 
 const DealModal: React.FC<DealModalProps> = ({ visible, deal, onCancel, onSuccess, players }) => {
     const [contractFileList, setContractFileList] = useState<any[]>([]);
+    const [imageFileList, setImageFileList] = useState<any[]>([]);
         // عند فتح المودال، لو فيه صور قديمة، نعرضها
         useEffect(() => {
             if (visible && deal) {
@@ -30,8 +31,19 @@ const DealModal: React.FC<DealModalProps> = ({ visible, deal, onCancel, onSucces
                 } else {
                     setContractFileList([]);
                 }
+                if (deal.imageUrl) {
+                    setImageFileList([{
+                        uid: '-img',
+                        name: t('admin.deals.deal_image', { defaultValue: 'deal image' }),
+                        status: 'done',
+                        url: deal.imageUrl,
+                    }]);
+                } else {
+                    setImageFileList([]);
+                }
             } else if (visible) {
                 setContractFileList([]);
+                setImageFileList([]);
             }
         }, [visible, deal]);
     const { t, i18n } = useTranslation();
@@ -112,12 +124,31 @@ const DealModal: React.FC<DealModalProps> = ({ visible, deal, onCancel, onSucces
                 contractUrl = null;
             }
 
+            // تجهيز صورة الصفقة
+            let imageUrl = deal?.imageUrl || null;
+            if (imageFileList.length > 0) {
+                const file = imageFileList[0];
+                if (file.url) {
+                    imageUrl = file.url;
+                } else if (file.originFileObj) {
+                    imageUrl = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file.originFileObj);
+                    });
+                }
+            } else {
+                imageUrl = null;
+            }
+
             const payload = {
                 ...values,
                 dealDate: values.dealDate ? values.dealDate.format('YYYY-MM-DD') : null,
                 contractStartDate: values.contractStartDate ? values.contractStartDate.format('YYYY-MM-DD') : null,
                 contractEndDate: values.contractEndDate ? values.contractEndDate.format('YYYY-MM-DD') : null,
                 contractUrl,
+                imageUrl,
             };
             if (deal) {
                 await dealService.update(deal.id, payload);
@@ -386,6 +417,23 @@ const DealModal: React.FC<DealModalProps> = ({ visible, deal, onCancel, onSucces
                                 <div>
                                     <PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
                                     <div style={{ marginTop: 8 }}>{t('admin.deals.upload_contract') || 'رفع العقد'}</div>
+                                </div>
+                            )}
+                        </Upload>
+                    </Form.Item>
+                    <Form.Item label={t('admin.deals.deal_image', { defaultValue: 'صورة الصفقة' })}>
+                        <Upload
+                            listType="picture-card"
+                            accept="image/*"
+                            fileList={imageFileList}
+                            onChange={({ fileList: newFileList }) => setImageFileList(newFileList.slice(-1))}
+                            beforeUpload={() => false}
+                            maxCount={1}
+                        >
+                            {imageFileList.length >= 1 ? null : (
+                                <div>
+                                    <PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />
+                                    <div style={{ marginTop: 8 }}>{t('admin.deals.upload_image', { defaultValue: 'رفع الصورة' })}</div>
                                 </div>
                             )}
                         </Upload>

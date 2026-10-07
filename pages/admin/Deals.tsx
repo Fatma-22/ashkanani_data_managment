@@ -15,6 +15,7 @@ import {
     Modal,
     Tag,
     Grid,
+    Image,
 } from 'antd';
 import {
     PlusOutlined,
@@ -677,6 +678,20 @@ export const Deals: FC = () => {
                                     </div>
                                 </div>
                             </Col>
+                            {selectedDealForView.imageUrl && (
+                                <Col xs={24}>
+                                    <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <Typography.Text type="secondary" className="block mb-3 text-[10px] uppercase tracking-wider font-bold text-slate-500">
+                                            {t('admin.deals.deal_image', { defaultValue: 'صورة الصفقة' })}
+                                        </Typography.Text>
+                                        <Image
+                                            src={selectedDealForView.imageUrl}
+                                            alt={t('admin.deals.deal_image', { defaultValue: 'Deal image' })}
+                                            style={{ maxHeight: 260, borderRadius: 12, objectFit: 'contain' }}
+                                        />
+                                    </div>
+                                </Col>
+                            )}
                             {(selectedDealForView.contractStartDate || selectedDealForView.contractEndDate || selectedDealForView.contractUrl) && (
                                 <Col xs={24}>
                                     <div className="mt-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">

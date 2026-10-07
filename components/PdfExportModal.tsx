@@ -1,9 +1,9 @@
 import { FC, useState } from 'react';
-import { Modal, Checkbox, Button, Divider, Typography, Space, Tag } from 'antd';
-import { FilePdfOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Modal, Checkbox, Button, Divider, Typography, Space, Tag, Select } from 'antd';
+import { FilePdfOutlined, CheckCircleOutlined, FilterOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { Player } from '../types';
-import { PDF_FIELD_OPTIONS, DEFAULT_PDF_FIELDS, generatePlayersPdf, PdfFieldOption } from '../utils/pdfExport';
+import { PDF_FIELD_OPTIONS, DEFAULT_PDF_FIELDS, generatePlayersPdf, PdfFieldOption, FILTERABLE_PDF_FIELD_KEYS, getDistinctFieldValues } from '../utils/pdfExport';
 
 const { Title, Text } = Typography;
 
@@ -27,6 +27,7 @@ const PdfExportModal: FC<PdfExportModalProps> = ({ open, onClose, players, total
     const { t, i18n } = useTranslation();
     const isAr = i18n.language.startsWith('ar');
     const [selectedFields, setSelectedFields] = useState<string[]>(DEFAULT_PDF_FIELDS);
+    const [valueFilters, setValueFilters] = useState<Record<string, string[]>>({});
     const [loading, setLoading] = useState(false);
 
     const handleToggleField = (key: string) => {
@@ -35,6 +36,14 @@ const PdfExportModal: FC<PdfExportModalProps> = ({ open, onClose, players, total
                 ? prev.filter(f => f !== key)
                 : [...prev, key]
         );
+        // Clear a value filter when its field is deselected
+        if (selectedFields.includes(key)) {
+            setValueFilters(prev => {
+                const next = { ...prev };
+                delete next[key];
+                return next;
+            });
+        }
     };
 
     const handleSelectAll = () => {
@@ -43,6 +52,19 @@ const PdfExportModal: FC<PdfExportModalProps> = ({ open, onClose, players, total
 
     const handleDeselectAll = () => {
         setSelectedFields([]);
+        setValueFilters({});
+    };
+
+    const setFieldValueFilter = (key: string, values: string[]) => {
+        setValueFilters(prev => {
+            const next = { ...prev };
+            if (!values || values.length === 0) {
+                delete next[key];
+            } else {
+                next[key] = values;
+            }
+            return next;
+        });
     };
 
     const handleSelectGroup = (groupKeys: string[]) => {
@@ -58,7 +80,7 @@ const PdfExportModal: FC<PdfExportModalProps> = ({ open, onClose, players, total
         if (selectedFields.length === 0) return;
         setLoading(true);
         try {
-            generatePlayersPdf(players, selectedFields, t, isAr, filterSummary);
+            generatePlayersPdf(players, selectedFields, t, isAr, filterSummary, valueFilters);
         } finally {
             setLoading(false);
             onClose();
@@ -185,6 +207,48 @@ const PdfExportModal: FC<PdfExportModalProps> = ({ open, onClose, players, total
                 {renderGroup('technical', FIELD_GROUPS.physical)}
                 {renderGroup('contract', FIELD_GROUPS.contract)}
                 {renderGroup('contact', FIELD_GROUPS.contact)}
+
+                {/* Per-field value filters: pick specific values for selected categorical fields */}
+                {(() => {
+                    const activeFilterableKeys = selectedFields.filter(k => FILTERABLE_PDF_FIELD_KEYS.includes(k));
+                    if (activeFilterableKeys.length === 0) return null;
+                    return (
+                        <>
+                            <Divider className="!my-3" />
+                            <div className="flex items-center gap-2 mb-2">
+                                <FilterOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} style={{ color: '#C9A24D' }} />
+                                <Text strong className="text-sm uppercase tracking-wider" style={{ color: '#C9A24D' }}>
+                                    {t('common.pdf_export.value_filters', { defaultValue: 'Filter by specific values (optional)' })}
+                                </Text>
+                            </div>
+                            <div className="flex flex-col gap-3">
+                                {activeFilterableKeys.map(key => {
+                                    const field = PDF_FIELD_OPTIONS.find(f => f.key === key) as PdfFieldOption;
+                                    const options = getDistinctFieldValues(key, players, t, isAr);
+                                    return (
+                                        <div key={key}>
+                                            <Text className="text-xs block mb-1" style={{ color: '#999' }}>
+                                                {isAr ? field.labelAr : field.labelEn}
+                                            </Text>
+                                            <Select
+                                                mode="multiple"
+                                                allowClear
+                                                showSearch
+                                                size="small"
+                                                className="w-full"
+                                                placeholder={t('common.pdf_export.all_values', { defaultValue: 'All values' })}
+                                                value={valueFilters[key] || []}
+                                                onChange={(vals) => setFieldValueFilter(key, vals)}
+                                                options={options.map(v => ({ value: v, label: v }))}
+                                                maxTagCount="responsive"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    );
+                })()}
 
                 {/* Filter info */}
                 {filterSummary && (

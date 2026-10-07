@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Space, Modal, Form, Input, InputNumber, Select, DatePicker, message, Typography, Row, Col, Statistic, Spin, Table, Tag, Divider, Radio, Result } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined, BarChartOutlined, PieChartOutlined, FilePdfOutlined, EyeOutlined, SwapOutlined } from '@ant-design/icons';
+import { Card, Button, Space, Modal, Form, Input, InputNumber, Select, DatePicker, message, Typography, Row, Col, Statistic, Spin, Table, Tag, Divider, Radio, Result, Upload } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined, BarChartOutlined, PieChartOutlined, FilePdfOutlined, EyeOutlined, SwapOutlined, UploadOutlined, PaperClipOutlined } from '@ant-design/icons';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import { FinancialRecord, FinancialStats, UserRole } from '../../types';
 import { ownerService } from '../../services/ownerService';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import dayjs from 'dayjs';
-import { formatCurrency, formatDate, translateText } from '../../utils/helpers';
+import { formatCurrency, formatDate, translateText, getCurrencySymbol } from '../../utils/helpers';
 import { sportsColors, ashkananiSportTheme } from '../../utils/theme';
 import { useAuth } from '../../context/AuthContext';
 import { canViewFinancials } from '../../utils/permissionHelpers';
@@ -57,6 +57,10 @@ export const OwnerFinancials: React.FC = () => {
         end_date: undefined as string | undefined,
     });
     const [form] = Form.useForm();
+    const formCurrency = Form.useWatch('currency', form) || 'USD';
+    const formCurrencySymbol = getCurrencySymbol(formCurrency);
+    const [invoiceFile, setInvoiceFile] = useState<any>(null);
+    const [removeInvoice, setRemoveInvoice] = useState(false);
 
     const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'KWD'>('USD');
     const [rates, setRates] = useState<Record<string, number>>({ USD: 1, KWD: 0.308, EUR: 0.92 });
@@ -210,6 +214,8 @@ export const OwnerFinancials: React.FC = () => {
     const handleCreate = () => {
         setEditingRecord(null);
         form.resetFields();
+        setInvoiceFile(null);
+        setRemoveInvoice(false);
         form.setFieldsValue({
             type: 'income',
             currency: 'USD',
@@ -219,6 +225,8 @@ export const OwnerFinancials: React.FC = () => {
 
     const handleEdit = (record: FinancialRecord) => {
         setEditingRecord(record);
+        setInvoiceFile(null);
+        setRemoveInvoice(false);
         form.setFieldsValue({
             ...record,
             date: record.date ? dayjs(record.date) : undefined,
@@ -262,25 +270,59 @@ export const OwnerFinancials: React.FC = () => {
         try {
             const values = await form.validateFields();
 
-            if (editingRecord) {
-                await ownerService.updateFinancialRecord(editingRecord.id as any, {
-                    ...values,
-                    type: values.type.toUpperCase(),
-                    description_ar: values.descriptionAr,
-                    transaction_date: values.date ? values.date.format('YYYY-MM-DD') : undefined,
+            const payload: Record<string, any> = {
+                type: (values.type || '').toUpperCase(),
+                category: values.category ?? '',
+                amount: values.amount ?? '',
+                currency: values.currency ?? '',
+                description: values.description ?? '',
+                description_ar: values.descriptionAr ?? '',
+                related_to: values.related_to ?? '',
+                transaction_date: values.date ? values.date.format('YYYY-MM-DD') : '',
+            };
+
+            const buildFormData = () => {
+                const fd = new FormData();
+                Object.entries(payload).forEach(([key, val]) => {
+                    if (val !== undefined && val !== null && val !== '') {
+                        fd.append(key, val as any);
+                    }
                 });
+                if (invoiceFile) {
+                    fd.append('invoice', invoiceFile);
+                }
+                if (removeInvoice) {
+                    fd.append('remove_invoice', '1');
+                }
+                return fd;
+            };
+
+            const hasFileChange = invoiceFile || removeInvoice;
+
+            if (editingRecord) {
+                await ownerService.updateFinancialRecord(
+                    editingRecord.id as any,
+                    hasFileChange ? buildFormData() : {
+                        ...payload,
+                        description_ar: values.descriptionAr,
+                        transaction_date: payload.transaction_date || undefined,
+                    }
+                );
                 message.success(t('messages.success_update'));
             } else {
-                await ownerService.createFinancialRecord({
-                    ...values,
-                    type: values.type.toUpperCase(),
-                    description_ar: values.descriptionAr,
-                    transaction_date: values.date ? values.date.format('YYYY-MM-DD') : undefined,
-                });
+                await ownerService.createFinancialRecord(
+                    invoiceFile ? buildFormData() : {
+                        ...payload,
+                        description_ar: values.descriptionAr,
+                        transaction_date: payload.transaction_date || undefined,
+                    }
+                );
                 message.success(t('messages.success_save'));
             }
 
             setModalVisible(false);
+            setInvoiceFile(null);
+            setRemoveInvoice(false);
             loadFinancials();
         } catch (error) {
             message.error(t('messages.error_save'));
@@ -347,6 +389,25 @@ export const OwnerFinancials: React.FC = () => {
             key: 'date',
             responsive: ['md'] as any,
             render: (date: string) => date ? formatDate(date) : '-',
+        },
+        {
+            title: t('owner.financials.invoice', { defaultValue: 'Invoice' }),
+            key: 'invoice',
+            render: (_: any, record: FinancialRecord) => (
+                record.invoice_url ? (
+                    <Button
+                        type="link"
+                        size="small"
+                        icon={<PaperClipOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                        href={record.invoice_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: sportsColors.gold[500] }}
+                    >
+                        {t('owner.financials.view_invoice', { defaultValue: 'View' })}
+                    </Button>
+                ) : <Text type="secondary">-</Text>
+            ),
         },
         {
             title: t('owner.financials.actions'),
@@ -700,8 +761,8 @@ export const OwnerFinancials: React.FC = () => {
                                             <InputNumber
                                                 style={{ width: '100%' }}
                                                 placeholder={t('owner.financials.amount_placeholder')}
-                                                formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                                                formatter={(value) => `${formCurrencySymbol} ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                                                parser={(value) => value!.replace(/[^\d.]/g, '')}
                                             />
                                         </Form.Item>
                                     </Col>
@@ -749,6 +810,58 @@ export const OwnerFinancials: React.FC = () => {
                                     label={t('owner.financials.related_to')}
                                 >
                                     <Input placeholder={t('owner.financials.related_to_placeholder')} />
+                                </Form.Item>
+
+                                <Form.Item
+                                    label={t('owner.financials.invoice', { defaultValue: 'Payment Invoice (PDF/Image)' })}
+                                >
+                                    {editingRecord?.invoice_url && !invoiceFile && !removeInvoice && (
+                                        <div style={{ marginBottom: 8 }}>
+                                            <Space>
+                                                <Button
+                                                    type="link"
+                                                    size="small"
+                                                    icon={<PaperClipOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                                    href={editingRecord.invoice_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    {t('owner.financials.view_invoice', { defaultValue: 'View current invoice' })}
+                                                </Button>
+                                                <Button
+                                                    type="link"
+                                                    size="small"
+                                                    danger
+                                                    icon={<DeleteOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                                    onClick={() => setRemoveInvoice(true)}
+                                                >
+                                                    {t('common.remove', { defaultValue: 'Remove' })}
+                                                </Button>
+                                            </Space>
+                                        </div>
+                                    )}
+                                    {removeInvoice && (
+                                        <div style={{ marginBottom: 8 }}>
+                                            <Text type="secondary">{t('owner.financials.invoice_will_be_removed', { defaultValue: 'Invoice will be removed on save.' })}</Text>
+                                            {' '}
+                                            <Button type="link" size="small" onClick={() => setRemoveInvoice(false)}>{t('common.cancel')}</Button>
+                                        </div>
+                                    )}
+                                    <Upload
+                                        maxCount={1}
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        beforeUpload={(file) => {
+                                            setInvoiceFile(file);
+                                            setRemoveInvoice(false);
+                                            return false;
+                                        }}
+                                        onRemove={() => setInvoiceFile(null)}
+                                        fileList={invoiceFile ? [invoiceFile] : []}
+                                    >
+                                        <Button icon={<UploadOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}>
+                                            {t('owner.financials.upload_invoice', { defaultValue: 'Upload Invoice' })}
+                                        </Button>
+                                    </Upload>
                                 </Form.Item>
                             </Form>
                         </Modal>
@@ -808,6 +921,21 @@ export const OwnerFinancials: React.FC = () => {
                                             <Col span={24}>
                                                 <Text type="secondary" className="block">{t('owner.financials.related_to')}</Text>
                                                 <Text strong>{selectedRecord.related_to}</Text>
+                                            </Col>
+                                        )}
+                                        {selectedRecord.invoice_url && (
+                                            <Col span={24}>
+                                                <Text type="secondary" className="block">{t('owner.financials.invoice', { defaultValue: 'Invoice' })}</Text>
+                                                <Button
+                                                    type="link"
+                                                    icon={<PaperClipOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                                    href={selectedRecord.invoice_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ padding: 0, color: sportsColors.gold[500] }}
+                                                >
+                                                    {t('owner.financials.view_invoice', { defaultValue: 'View Invoice' })}
+                                                </Button>
                                             </Col>
                                         )}
                                     </Row>

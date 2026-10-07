@@ -63,6 +63,8 @@ import { isHandSport, isFootSport, hasLimbPreference } from '../utils/sports';
 import publicService from '../services/publicService';
 import profileService from '../services/profileService';
 import { PlayerEditModal } from '../components/PlayerEditModal';
+import PlayerPaymentsSection from '../components/PlayerPaymentsSection';
+import { canViewFinancials } from '../utils/permissionHelpers';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -2308,6 +2310,10 @@ export const PlayerDetails: FC = () => {
                     }}
                     editingPlayer={player}
                 />
+            )}
+
+            {(user?.role === UserRole.OWNER || (user?.role === UserRole.ADMIN && canViewFinancials(user))) && id && (
+                <PlayerPaymentsSection playerId={id} />
             )}
         </div>
     );

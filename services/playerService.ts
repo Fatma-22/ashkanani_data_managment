@@ -86,6 +86,10 @@ export const playerService = {
             filters.contractNature.forEach(n => params.append('contract_nature[]', n));
         }
 
+        if (filters?.excludeContractNature && filters.excludeContractNature.length > 0) {
+            filters.excludeContractNature.forEach(n => params.append('exclude_contract_nature[]', n));
+        }
+
         if (typeof filters?.isLocal === 'boolean') params.append('is_local', filters.isLocal.toString());
         if (typeof filters?.isApproved === 'boolean') {
             params.append('is_approved', filters.isApproved ? '1' : '0');
@@ -221,6 +225,32 @@ export const playerService = {
 
     delete: async (id: string): Promise<void> => {
         await apiClient.delete(`/players/${id}`);
+    },
+
+    // --- Player Payments (confidential, management only) ---
+    getPayments: async (playerId: string): Promise<any[]> => {
+        const response: any = await apiClient.get(`/players/${playerId}/payments`);
+        return response.data?.data || response.data || [];
+    },
+
+    createPayment: async (playerId: string, data: FormData): Promise<any> => {
+        const response: any = await apiClient.post(`/players/${playerId}/payments`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    updatePayment: async (playerId: string, paymentId: string | number, data: FormData): Promise<any> => {
+        // Laravel cannot parse multipart PUT bodies, so send FormData via POST with method override
+        data.append('_method', 'PUT');
+        const response: any = await apiClient.post(`/players/${playerId}/payments/${paymentId}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    deletePayment: async (playerId: string, paymentId: string | number): Promise<void> => {
+        await apiClient.delete(`/players/${playerId}/payments/${paymentId}`);
     },
 
     uploadPhoto: async (playerId: string, formData: FormData): Promise<any> => {

@@ -11,6 +11,51 @@ export interface PdfFieldOption {
     getValue: (player: Player, t: any, isAr: boolean) => string;
 }
 
+// Field keys whose values are categorical and therefore support
+// per-value selection in the PDF export modal.
+export const FILTERABLE_PDF_FIELD_KEYS = [
+    'sport', 'nationality', 'club', 'positions', 'preferredFoot',
+    'dealStatus', 'contractStatus', 'contractNature', 'gender', 'bornInKuwait'
+];
+
+/**
+ * Compute the distinct, display-ready values for a given field across a set
+ * of players. Multi-value fields (e.g. positions) are split on commas.
+ */
+export function getDistinctFieldValues(key: string, players: Player[], t: any, isAr: boolean): string[] {
+    const field = PDF_FIELD_OPTIONS.find(f => f.key === key);
+    if (!field) return [];
+    const set = new Set<string>();
+    players.forEach(p => {
+        const raw = field.getValue(p, t, isAr) || '';
+        raw.split(',').map(s => s.trim()).filter(Boolean).forEach(v => set.add(v));
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, isAr ? 'ar' : 'en'));
+}
+
+/**
+ * Whether a player passes the active per-field value filters.
+ * `valueFilters` maps a field key to the list of allowed display values.
+ */
+export function playerMatchesValueFilters(
+    player: Player,
+    valueFilters: Record<string, string[]> | undefined,
+    t: any,
+    isAr: boolean
+): boolean {
+    if (!valueFilters) return true;
+    for (const [key, allowed] of Object.entries(valueFilters)) {
+        if (!allowed || allowed.length === 0) continue;
+        const field = PDF_FIELD_OPTIONS.find(f => f.key === key);
+        if (!field) continue;
+        const raw = field.getValue(player, t, isAr) || '';
+        const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+        const matched = allowed.includes(raw) || parts.some(p => allowed.includes(p));
+        if (!matched) return false;
+    }
+    return true;
+}
+
 export const PDF_FIELD_OPTIONS: PdfFieldOption[] = [
     {
         key: 'name',
@@ -165,11 +210,15 @@ export function generatePlayersPdf(
     selectedFields: string[],
     t: any,
     isAr: boolean,
-    filterSummary?: string
+    filterSummary?: string,
+    valueFilters?: Record<string, string[]>
 ) {
     const fields = selectedFields
         .map(key => PDF_FIELD_OPTIONS.find(f => f.key === key))
         .filter(Boolean) as PdfFieldOption[];
+
+    // Apply per-field value filters chosen in the export modal
+    players = players.filter(p => playerMatchesValueFilters(p, valueFilters, t, isAr));
 
     const now = new Date();
     const dateStr = now.toLocaleDateString(isAr ? 'ar-KW' : 'en-US', {

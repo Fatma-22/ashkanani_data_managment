@@ -300,7 +300,7 @@ export const OwnerDashboard: React.FC = () => {
                             children: (
                                 <div className="pt-4">
                                     <Row gutter={[16, 16]}>
-                                        <Col xs={24} sm={8}>
+                                        <Col xs={24} sm={12} lg={6}>
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('admin.dashboard.total_players')}
@@ -325,7 +325,7 @@ export const OwnerDashboard: React.FC = () => {
                                                 </div>
                                             </Card>
                                         </Col>
-                                        <Col xs={24} sm={8}>
+                                        <Col xs={24} sm={12} lg={6}>
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('admin.dashboard.active_contracts')}
@@ -336,7 +336,7 @@ export const OwnerDashboard: React.FC = () => {
                                                 />
                                             </Card>
                                         </Col>
-                                        <Col xs={24} sm={8}>
+                                        <Col xs={24} sm={12} lg={6}>
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('admin.dashboard.expiring_soon')}
@@ -344,6 +344,17 @@ export const OwnerDashboard: React.FC = () => {
                                                     prefix={<CalendarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#faad14]" />}
                                                     valueStyle={{ color: '#3F3F3F', fontWeight: 'bold' }}
                                                     suffix={<span className="text-xs font-normal text-slate-400 ml-1"> {t('admin.dashboard.contracts_suffix')}</span>}
+                                                    loading={loading || loadingSport}
+                                                />
+                                            </Card>
+                                        </Col>
+                                        <Col xs={24} sm={12} lg={6}>
+                                            <Card className="card-hover">
+                                                <Statistic
+                                                    title={t('admin.dashboard.total_members')}
+                                                    value={stats.totalMembers || 0}
+                                                    prefix={<TeamOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#C9A24D]" />}
+                                                    valueStyle={{ color: '#C9A24D', fontWeight: 'bold' }}
                                                     loading={loading || loadingSport}
                                                 />
                                             </Card>
