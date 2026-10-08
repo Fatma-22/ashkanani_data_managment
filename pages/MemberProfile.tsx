@@ -2003,7 +2003,7 @@ export const MemberProfile: React.FC = () => {
                         </Col>
                         <Col xs={24} sm={8}><Form.Item {...restField} name={[name, 'year_obtained']} label={t('coaches.year_obtained')}><InputNumber className="w-full rounded-lg h-10 flex items-center" min={1900} max={dayjs().year()} /></Form.Item></Col>
                         <Col xs={24} sm={12}>
-                          <Form.Item {...restField} name={[name, 'source_type']} label={t('coaches.source_type')} rules={[{ required: true }]}>
+                          <Form.Item {...restField} name={[name, 'source_type']} label={t('coaches.source_type')}>
                             <Select className="rounded-lg h-10">
                               {['Sports Federation', 'Academy', 'University', 'Online Course', 'Club Training', 'Other'].map(source => (
                                 <Select.Option key={source} value={source}>{t(`coaches.sources.${source.replace(/\s+/g, '_').toLowerCase()}`, { defaultValue: source })}</Select.Option>

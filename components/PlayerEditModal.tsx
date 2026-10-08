@@ -1135,9 +1135,9 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({
                                         <div key={key} className="p-4 border rounded-lg bg-gray-50/50 relative">
                                             <Button type="text" danger icon={<DeleteOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} onClick={() => remove(name)} className="absolute top-2 right-2 z-10" />
                                             <Row gutter={[12, 12]}>
-                                                <Col xs={24} sm={12}><Form.Item {...restField} name={[name, 'certificate_name']} label={t('coaches.certificate_name', { defaultValue: 'Certificate Name' })} rules={[{ required: true }]}><Input /></Form.Item></Col>
+                                                <Col xs={24} sm={12}><Form.Item {...restField} name={[name, 'certificate_name']} label={t('coaches.certificate_name', { defaultValue: 'Certificate Name' })}><Input /></Form.Item></Col>
                                                 <Col xs={24} sm={12}>
-                                                    <Form.Item {...restField} name={[name, 'certificate_type']} label={t('coaches.certificate_type')} rules={[{ required: true }]}>
+                                                    <Form.Item {...restField} name={[name, 'certificate_type']} label={t('coaches.certificate_type')}>
                                                         <Select>
                                                             {[
                                                                 'Coaching License', 
@@ -1167,9 +1167,9 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({
                                                         </Select>
                                                     </Form.Item>
                                                 </Col>
-                                                <Col xs={24} sm={8}><Form.Item {...restField} name={[name, 'issuing_body']} label={t('coaches.issuing_body')} rules={[{ required: true }]}><Input /></Form.Item></Col>
+                                                <Col xs={24} sm={8}><Form.Item {...restField} name={[name, 'issuing_body']} label={t('coaches.issuing_body')}><Input /></Form.Item></Col>
                                                 <Col xs={24} sm={8}>
-                                                    <Form.Item {...restField} name={[name, 'level']} label={t('coaches.level')} rules={[{ required: true }]}>
+                                                    <Form.Item {...restField} name={[name, 'level']} label={t('coaches.level')}>
                                                         <Select>
                                                             {['Beginner', 'Intermediate', 'Advanced', 'Professional'].map(level => (
                                                                 <Select.Option key={level} value={level}>{t(`coaches.levels.${level.toLowerCase()}`, { defaultValue: level })}</Select.Option>
@@ -1179,7 +1179,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({
                                                 </Col>
                                                 <Col xs={24} sm={8}><Form.Item {...restField} name={[name, 'year_obtained']} label={t('coaches.year_obtained')}><InputNumber className="w-full" min={1900} max={dayjs().year()} /></Form.Item></Col>
                                                 <Col xs={24} sm={12}>
-                                                    <Form.Item {...restField} name={[name, 'source_type']} label={t('coaches.source_type')} rules={[{ required: true }]}>
+                                                    <Form.Item {...restField} name={[name, 'source_type']} label={t('coaches.source_type')}>
                                                         <Select>
                                                             {['Sports Federation', 'Academy', 'University', 'Online Course', 'Club Training', 'Other'].map(source => (
                                                                 <Select.Option key={source} value={source}>{t(`coaches.sources.${source.replace(/\s+/g, '_').toLowerCase()}`, { defaultValue: source })}</Select.Option>
