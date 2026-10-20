@@ -130,19 +130,29 @@ export const Players: FC = () => {
       };
     }
 
-    // ALL / ACTIVE / EXPIRED: exclude self-registered (NOT_JOINED) and
-    // authorization members so they don't leak into the athletes search.
+    // "All Members" must literally include every record, regardless of
+    // contract nature (SIGNING / AUTHORIZATION / NOT_JOINED / TERMINATION)
+    // or contract status. Management screens also include unapproved rows.
+    if (activeTab === 'ALL') {
+      return {
+        ...filters,
+        excludeContractNature: undefined,
+        contractStatus: undefined,
+        includeUnapproved: true,
+      };
+    }
+
+    // ACTIVE / EXPIRED are contract-based tabs: they exclude self-registered
+    // (NOT_JOINED) and authorization members, which have their own tabs.
     const excludeContractNature = ['NOT_JOINED', 'AUTHORIZATION'];
     return {
       ...filters,
       // Don't let the search filters re-introduce an authorization filter here
       contractNature: filters.contractNature?.filter((n: string) => n !== 'AUTHORIZATION'),
       excludeContractNature,
-      contractStatus: activeTab === 'ALL'
-        ? undefined
-        : (activeTab === 'ACTIVE'
-          ? [ContractStatus.ACTIVE, ContractStatus.PENDING, ContractStatus.NEGOTIATION]
-          : [ContractStatus.EXPIRED]),
+      contractStatus: activeTab === 'ACTIVE'
+        ? [ContractStatus.ACTIVE, ContractStatus.PENDING, ContractStatus.NEGOTIATION]
+        : [ContractStatus.EXPIRED],
     };
   };
 

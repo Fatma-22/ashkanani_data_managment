@@ -90,6 +90,10 @@ export const playerService = {
             filters.excludeContractNature.forEach(n => params.append('exclude_contract_nature[]', n));
         }
 
+        if (filters?.includeUnapproved) {
+            params.append('include_unapproved', '1');
+        }
+
         if (typeof filters?.isLocal === 'boolean') params.append('is_local', filters.isLocal.toString());
         if (typeof filters?.isApproved === 'boolean') {
             params.append('is_approved', filters.isApproved ? '1' : '0');

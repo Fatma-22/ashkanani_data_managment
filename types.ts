@@ -486,8 +486,9 @@ export interface PlayerFilters {
   remainingDuration?: ('2months' | '6months' | '1year' | '2years' | 'moreThan2years')[];
 
   contractType?: ('PROFESSIONAL' | 'YOUTH' | 'LOAN' | 'AMATEUR')[];
-  contractNature?: ('AUTHORIZATION' | 'SIGNING')[];
+  contractNature?: ('AUTHORIZATION' | 'SIGNING' | 'NOT_JOINED' | 'TERMINATION')[];
   excludeContractNature?: string[];
+  includeUnapproved?: boolean;
   contractStatus?: ContractStatus[];
   agentId?: string;
   start_date?: string;
