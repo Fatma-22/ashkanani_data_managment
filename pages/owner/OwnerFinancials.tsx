@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, Button, Space, Modal, Form, Input, InputNumber, Select, DatePicker, message, Typography, Row, Col, Statistic, Spin, Table, Tag, Divider, Radio, Result, Upload } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined, BarChartOutlined, PieChartOutlined, FilePdfOutlined, EyeOutlined, SwapOutlined, UploadOutlined, PaperClipOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DollarOutlined, BarChartOutlined, PieChartOutlined, FilePdfOutlined, EyeOutlined, SwapOutlined, UploadOutlined, PaperClipOutlined, SearchOutlined, UserOutlined, ClearOutlined, LinkOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
 import { FinancialRecord, FinancialStats, UserRole } from '../../types';
 import { ownerService } from '../../services/ownerService';
@@ -24,6 +25,19 @@ const isArabicText = (text?: string) => {
     return arabicPattern.test(text);
 };
 const { Option } = Select;
+
+const FINANCIAL_CATEGORIES = [
+    'Commission',
+    'Marketing',
+    'Consultation',
+    'Salary',
+    'Bonus',
+    'Sponsorship',
+    'PlayerPayment',
+    'Other',
+];
+
+const PERSON_TYPE_OPTIONS = ['all', 'player', 'employee', 'agent', 'admin', 'member'];
 
 export const OwnerFinancials: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -51,11 +65,27 @@ export const OwnerFinancials: React.FC = () => {
     const [viewModalVisible, setViewModalVisible] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<FinancialRecord | null>(null);
     const [pdfModalVisible, setPdfModalVisible] = useState(false);
-    const [filters, setFilters] = useState({
-        type: undefined as 'income' | 'expense' | 'arrears' | undefined,
-        start_date: undefined as string | undefined,
-        end_date: undefined as string | undefined,
-    });
+    const navigate = useNavigate();
+    const [filters, setFilters] = useState<{
+        type?: 'income' | 'expense' | 'arrears';
+        start_date?: string;
+        end_date?: string;
+        q?: string;
+        category?: string;
+        min_amount?: number;
+        max_amount?: number;
+        related_type?: string;
+        related_id?: string | number;
+    }>({});
+    const [searchInput, setSearchInput] = useState('');
+    const [personOptions, setPersonOptions] = useState<any[]>([]);
+    const [personLoading, setPersonLoading] = useState(false);
+    const [filterPerson, setFilterPerson] = useState<any | null>(null);
+    const [modalPersonOptions, setModalPersonOptions] = useState<any[]>([]);
+    const [modalPersonLoading, setModalPersonLoading] = useState(false);
+    const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
+    const personTimer = useRef<any>(null);
+    const modalPersonTimer = useRef<any>(null);
     const [form] = Form.useForm();
     const formCurrency = Form.useWatch('currency', form) || 'USD';
     const formCurrencySymbol = getCurrencySymbol(formCurrency);
@@ -96,6 +126,107 @@ export const OwnerFinancials: React.FC = () => {
     useEffect(() => {
         loadFinancials();
     }, [filters, i18n.language]);
+
+    // Debounced server-side search (professional search engine)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const nextQuery = searchInput.trim() || undefined;
+            setFilters(prev => (prev.q === nextQuery ? prev : { ...prev, q: nextQuery }));
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [searchInput]);
+
+    const loadPersons = async (term: string, type?: string) => {
+        setPersonLoading(true);
+        try {
+            const data = await ownerService.searchPersons(term, type);
+            setPersonOptions(Array.isArray(data) ? data : []);
+        } catch (error) {
+            setPersonOptions([]);
+        } finally {
+            setPersonLoading(false);
+        }
+    };
+
+    const schedulePersonSearch = (term: string, type?: string) => {
+        if (personTimer.current) clearTimeout(personTimer.current);
+        personTimer.current = setTimeout(() => loadPersons(term, type), 350);
+    };
+
+    const loadModalPersons = async (term: string) => {
+        setModalPersonLoading(true);
+        try {
+            const data = await ownerService.searchPersons(term);
+            setModalPersonOptions(Array.isArray(data) ? data : []);
+        } catch (error) {
+            setModalPersonOptions([]);
+        } finally {
+            setModalPersonLoading(false);
+        }
+    };
+
+    const scheduleModalPersonSearch = (term: string) => {
+        if (modalPersonTimer.current) clearTimeout(modalPersonTimer.current);
+        modalPersonTimer.current = setTimeout(() => loadModalPersons(term), 350);
+    };
+
+    const personRoleLabel = (person: any) => {
+        const role = String(person?.role || person?.type || '').toUpperCase();
+        return t(`owner.financials.person_roles.${role}`, {
+            defaultValue: t(`owner.financials.person_types.${person?.type || 'player'}`, { defaultValue: role }),
+        });
+    };
+
+    const personOptionLabel = (person: any) => {
+        const name = i18n.language === 'ar'
+            ? (person.name_ar || person.name)
+            : (person.name || person.name_ar);
+
+        return (
+            <Space size={6} wrap>
+                <Tag color={person.type === 'player' ? 'gold' : 'blue'} style={{ marginInlineEnd: 0 }}>
+                    {personRoleLabel(person)}
+                </Tag>
+                <span>{name || '-'}</span>
+                {person.subtitle && (
+                    <Text type="secondary" style={{ fontSize: 11 }}>{person.subtitle}</Text>
+                )}
+            </Space>
+        );
+    };
+
+    const personOptionsFor = (options: any[], selected: any | null) => {
+        const unique = new Map<string, any>();
+
+        [...(selected ? [selected] : []), ...options].forEach((person) => {
+            if (person?.key) {
+                unique.set(person.key, person);
+            }
+        });
+
+        return Array.from(unique.values()).map((person) => ({
+            value: person.key,
+            label: personOptionLabel(person),
+            person,
+        }));
+    };
+
+    const handleFilterPersonChange = (_key: any, option: any) => {
+        const person = option?.person || null;
+        setFilterPerson(person);
+        setFilters(prev => ({
+            ...prev,
+            related_type: person?.type,
+            related_id: person?.id,
+        }));
+    };
+
+    const clearAllFilters = () => {
+        setSearchInput('');
+        setFilterPerson(null);
+        setPersonOptions([]);
+        setFilters({});
+    };
 
     const loadFinancials = async () => {
         setLoading(true);
@@ -217,6 +348,8 @@ export const OwnerFinancials: React.FC = () => {
         form.resetFields();
         setInvoiceFile(null);
         setRemoveInvoice(false);
+        setSelectedPerson(null);
+        setModalPersonOptions([]);
         form.setFieldsValue({
             type: 'income',
             currency: 'USD',
@@ -228,6 +361,14 @@ export const OwnerFinancials: React.FC = () => {
         setEditingRecord(record);
         setInvoiceFile(null);
         setRemoveInvoice(false);
+
+        const relatedPerson = record.related_person
+            ? { ...record.related_person, key: `${record.related_person.type}:${record.related_person.id}` }
+            : null;
+
+        setSelectedPerson(relatedPerson);
+        setModalPersonOptions(relatedPerson ? [relatedPerson] : []);
+
         form.setFieldsValue({
             ...record,
             date: record.date ? dayjs(record.date) : undefined,
@@ -243,7 +384,17 @@ export const OwnerFinancials: React.FC = () => {
     const handleDelete = (record: FinancialRecord) => {
         Modal.confirm({
             title: t('owner.financials.delete_record_title'),
-            content: t('owner.financials.delete_record_confirm', { description: record.description }),
+            content: record.payment_component === 'REMAINING'
+                ? t('owner.financials.delete_remaining_confirm', {
+                    description: record.description,
+                    defaultValue: 'This row represents the remaining amount. Deleting it marks the payment as fully paid. Delete {{description}}?',
+                })
+                : record.is_synced
+                    ? t('owner.financials.delete_synced_confirm', {
+                        description: record.description,
+                        defaultValue: 'This record is linked to a player payment. Deleting it will delete the payment from the player profile too. Delete {{description}}?',
+                    })
+                    : t('owner.financials.delete_record_confirm', { description: record.description }),
             okText: t('common.delete'),
             okType: 'primary',
             onOk: async () => {
@@ -279,12 +430,18 @@ export const OwnerFinancials: React.FC = () => {
                 description: values.description ?? '',
                 description_ar: values.descriptionAr ?? '',
                 related_to: values.related_to ?? '',
+                related_type: selectedPerson?.type ?? null,
+                related_id: selectedPerson?.id ?? null,
                 transaction_date: values.date ? values.date.format('YYYY-MM-DD') : '',
             };
 
             const buildFormData = () => {
                 const fd = new FormData();
                 Object.entries(payload).forEach(([key, val]) => {
+                    if (key === 'related_type' || key === 'related_id') {
+                        fd.append(key, val === undefined || val === null ? '' : String(val));
+                        return;
+                    }
                     if (val !== undefined && val !== null && val !== '') {
                         fd.append(key, val as any);
                     }
@@ -383,6 +540,46 @@ export const OwnerFinancials: React.FC = () => {
             title: t('owner.financials.related_to'),
             dataIndex: 'related_to',
             key: 'related_to',
+            render: (_: string, record: FinancialRecord) => {
+                const person = record.related_person;
+                const name = i18n.language === 'ar'
+                    ? (person?.name_ar || person?.name)
+                    : (person?.name || person?.name_ar);
+
+                if (!person) {
+                    return record.related_to ? <span>{record.related_to}</span> : <Text type="secondary">-</Text>;
+                }
+
+                return (
+                    <Space direction="vertical" size={2}>
+                        <Space size={4} wrap>
+                            <Tag color={person.type === 'player' ? 'gold' : 'blue'} style={{ marginInlineEnd: 0 }}>
+                                {personRoleLabel(person)}
+                            </Tag>
+                            {person.type === 'player' ? (
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    style={{ padding: 0, height: 'auto' }}
+                                    onClick={() => navigate(`${user?.role === UserRole.OWNER ? '/owner' : '/admin'}/players/${person.id}`)}
+                                >
+                                    {name || '-'}
+                                </Button>
+                            ) : (
+                                <Text strong>{name || '-'}</Text>
+                            )}
+                            {record.is_synced && (
+                                <Tag color="green" icon={<LinkOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}>
+                                    {t('owner.financials.synced_badge', { defaultValue: 'Synced' })}
+                                </Tag>
+                            )}
+                        </Space>
+                        {person.subtitle && (
+                            <Text type="secondary" style={{ fontSize: 11 }}>{person.subtitle}</Text>
+                        )}
+                    </Space>
+                );
+            },
         },
         {
             title: t('owner.financials.date'),
@@ -538,6 +735,35 @@ export const OwnerFinancials: React.FC = () => {
 
                         {/* Filters and Actions */}
                         <Card>
+                            <Row gutter={[16, 16]} className="mb-4">
+                                <Col xs={24} lg={14}>
+                                    <Input
+                                        size="large"
+                                        allowClear
+                                        value={searchInput}
+                                        onChange={(e) => setSearchInput(e.target.value)}
+                                        prefix={<SearchOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} style={{ color: '#C9A24D' }} />}
+                                        placeholder={t('owner.financials.search_placeholder', { defaultValue: 'Search by name, description, amount, invoice...' })}
+                                    />
+                                </Col>
+                                <Col xs={24} lg={10}>
+                                    <Select
+                                        showSearch
+                                        allowClear
+                                        size="large"
+                                        style={{ width: '100%' }}
+                                        value={filterPerson?.key}
+                                        filterOption={false}
+                                        loading={personLoading}
+                                        onSearch={(value) => schedulePersonSearch(value)}
+                                        onFocus={() => { if (personOptions.length === 0) loadPersons('', undefined); }}
+                                        onChange={handleFilterPersonChange}
+                                        options={personOptionsFor(personOptions, filterPerson)}
+                                        placeholder={t('owner.financials.person_search_placeholder', { defaultValue: 'Filter by linked person' })}
+                                        suffixIcon={<UserOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                    />
+                                </Col>
+                            </Row>
                             <Row gutter={[16, 16]} justify="space-between" align="bottom">
                                 <Col xs={24} lg={14}>
                                     <Row gutter={[16, 16]}>
@@ -563,11 +789,13 @@ export const OwnerFinancials: React.FC = () => {
                                             <Space className="w-full">
                                                 <DatePicker
                                                     placeholder={t('common.start_date')}
+                                                    value={filters.start_date ? dayjs(filters.start_date) : undefined}
                                                     onChange={(date) => setFilters({ ...filters, start_date: date ? date.format('YYYY-MM-DD') : undefined })}
                                                     className="w-full"
                                                 />
                                                 <DatePicker
                                                     placeholder={t('common.end_date')}
+                                                    value={filters.end_date ? dayjs(filters.end_date) : undefined}
                                                     onChange={(date) => setFilters({ ...filters, end_date: date ? date.format('YYYY-MM-DD') : undefined })}
                                                     className="w-full"
                                                 />
@@ -608,6 +836,89 @@ export const OwnerFinancials: React.FC = () => {
                                             className="h-10 grow lg:grow-0"
                                         >
                                             {t('common.pdf_export.export_btn', { defaultValue: 'Export PDF' })}
+                                        </Button>
+                                    </Space>
+                                </Col>
+                            </Row>
+
+                            <Row gutter={[16, 16]} align="bottom" className="mt-4">
+                                <Col xs={24} sm={12} lg={5}>
+                                    <Text strong className="block mb-2 text-slate-400 uppercase text-[10px] tracking-widest">
+                                        {t('owner.financials.category')}
+                                    </Text>
+                                    <Select
+                                        allowClear
+                                        style={{ width: '100%' }}
+                                        value={filters.category}
+                                        placeholder={t('owner.financials.category_placeholder')}
+                                        onChange={(value) => setFilters(prev => ({ ...prev, category: value || undefined }))}
+                                    >
+                                        {FINANCIAL_CATEGORIES.map((category) => (
+                                            <Option key={category} value={category}>
+                                                {t(`owner.financials.categories.${category}`, { defaultValue: category })}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Col>
+                                <Col xs={12} sm={6} lg={4}>
+                                    <Text strong className="block mb-2 text-slate-400 uppercase text-[10px] tracking-widest">
+                                        {t('owner.financials.min_amount', { defaultValue: 'Min amount' })}
+                                    </Text>
+                                    <InputNumber
+                                        style={{ width: '100%' }}
+                                        min={0}
+                                        value={filters.min_amount}
+                                        onChange={(value) => setFilters(prev => ({ ...prev, min_amount: typeof value === 'number' ? value : undefined }))}
+                                        placeholder="0"
+                                    />
+                                </Col>
+                                <Col xs={12} sm={6} lg={4}>
+                                    <Text strong className="block mb-2 text-slate-400 uppercase text-[10px] tracking-widest">
+                                        {t('owner.financials.max_amount', { defaultValue: 'Max amount' })}
+                                    </Text>
+                                    <InputNumber
+                                        style={{ width: '100%' }}
+                                        min={0}
+                                        value={filters.max_amount}
+                                        onChange={(value) => setFilters(prev => ({ ...prev, max_amount: typeof value === 'number' ? value : undefined }))}
+                                        placeholder="0"
+                                    />
+                                </Col>
+                                <Col xs={24} sm={12} lg={5}>
+                                    <Text strong className="block mb-2 text-slate-400 uppercase text-[10px] tracking-widest">
+                                        {t('owner.financials.person_type', { defaultValue: 'Person type' })}
+                                    </Text>
+                                    <Select
+                                        style={{ width: '100%' }}
+                                        value={filters.related_type || 'all'}
+                                        onChange={(value) => {
+                                            setFilterPerson(null);
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                related_type: value === 'all' ? undefined : value,
+                                                related_id: undefined,
+                                            }));
+                                        }}
+                                    >
+                                        {PERSON_TYPE_OPTIONS.map((type) => (
+                                            <Option key={type} value={type}>
+                                                {type === 'all'
+                                                    ? t('owner.financials.all_person_types', { defaultValue: 'All people' })
+                                                    : t(`owner.financials.person_types.${type}`, { defaultValue: type })}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Col>
+                                <Col xs={24} lg={6}>
+                                    <Space wrap size="middle" style={{ width: '100%', justifyContent: 'flex-end' }}>
+                                        <Text type="secondary">
+                                            {t('owner.financials.search_results', { count: records.length, defaultValue: '{{count}} results' })}
+                                        </Text>
+                                        <Button
+                                            icon={<ClearOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                                            onClick={clearAllFilters}
+                                        >
+                                            {t('owner.financials.clear_filters', { defaultValue: 'Clear filters' })}
                                         </Button>
                                     </Space>
                                 </Col>
@@ -807,6 +1118,37 @@ export const OwnerFinancials: React.FC = () => {
                                     <DatePicker style={{ width: '100%' }} />
                                 </Form.Item>
 
+                                <Form.Item label={t('owner.financials.link_person', { defaultValue: 'Link to a person on the website' })}>
+                                    <Select
+                                        showSearch
+                                        allowClear
+                                        filterOption={false}
+                                        value={selectedPerson?.key}
+                                        loading={modalPersonLoading}
+                                        onSearch={scheduleModalPersonSearch}
+                                        onFocus={() => { if (modalPersonOptions.length === 0) loadModalPersons(''); }}
+                                        onChange={(_key: any, option: any) => {
+                                            const person = option?.person || null;
+                                            setSelectedPerson(person);
+
+                                            if (person) {
+                                                const personName = i18n.language === 'ar'
+                                                    ? (person.name_ar || person.name)
+                                                    : (person.name || person.name_ar);
+                                                form.setFieldsValue({ related_to: personName || person.name || '' });
+                                            } else {
+                                                form.setFieldsValue({ related_to: '' });
+                                            }
+                                        }}
+                                        options={personOptionsFor(modalPersonOptions, selectedPerson)}
+                                        placeholder={t('owner.financials.person_search_placeholder', { defaultValue: 'Search athletes, coaches, employees...' })}
+                                        notFoundContent={modalPersonLoading ? <Spin size="small" /> : undefined}
+                                    />
+                                    <Text type="secondary" style={{ fontSize: 11 }}>
+                                        {t('owner.financials.link_person_hint', { defaultValue: 'Payments for athletes are synced automatically with this record.' })}
+                                    </Text>
+                                </Form.Item>
+
                                 <Form.Item
                                     name="related_to"
                                     label={t('owner.financials.related_to')}
@@ -925,6 +1267,29 @@ export const OwnerFinancials: React.FC = () => {
                                             <Col span={24}>
                                                 <Text type="secondary" className="block">{t('owner.financials.related_to')}</Text>
                                                 <Text strong>{selectedRecord.related_to}</Text>
+                                            </Col>
+                                        )}
+                                        {selectedRecord.related_person && (
+                                            <Col span={24}>
+                                                <Text type="secondary" className="block">
+                                                    {t('owner.financials.link_person', { defaultValue: 'Linked person' })}
+                                                </Text>
+                                                <Space wrap size={6}>
+                                                    <Tag color={selectedRecord.related_person.type === 'player' ? 'gold' : 'blue'}>
+                                                        {personRoleLabel(selectedRecord.related_person)}
+                                                    </Tag>
+                                                    <Text strong>
+                                                        {i18n.language === 'ar'
+                                                            ? (selectedRecord.related_person.name_ar || selectedRecord.related_person.name)
+                                                            : (selectedRecord.related_person.name || selectedRecord.related_person.name_ar)}
+                                                    </Text>
+                                                    {selectedRecord.related_person.subtitle && (
+                                                        <Text type="secondary" style={{ fontSize: 11 }}>{selectedRecord.related_person.subtitle}</Text>
+                                                    )}
+                                                    {selectedRecord.is_synced && (
+                                                        <Tag color="green">{t('owner.financials.synced_badge', { defaultValue: 'Synced' })}</Tag>
+                                                    )}
+                                                </Space>
                                             </Col>
                                         )}
                                         {selectedRecord.invoice_url && (

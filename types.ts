@@ -560,6 +560,16 @@ export interface Admin {
 }
 
 // Financial Management Types
+export interface RelatedPerson {
+  type: 'player' | 'employee' | 'member' | 'agent' | 'admin' | string;
+  id: number | string;
+  name?: string;
+  name_ar?: string;
+  role?: string;
+  subtitle?: string | null;
+  url?: string | null;
+}
+
 export interface PlayerPayment {
   id: number | string;
   player_id?: number | string;
@@ -576,6 +586,9 @@ export interface PlayerPayment {
   notes?: string;
   created_by?: string | number;
   created_at?: string;
+  is_synced?: boolean;
+  financialRecords?: FinancialRecord[];
+  financial_record?: FinancialRecord | null;
 }
 
 export interface FinancialRecord {
@@ -589,7 +602,12 @@ export interface FinancialRecord {
   descriptionAr?: string;
   date: string;
   related_to?: string;
-  related_type?: 'player' | 'agent' | 'employee';
+  related_type?: 'player' | 'agent' | 'employee' | 'member' | 'admin' | string | null;
+  related_id?: number | string | null;
+  related_person?: RelatedPerson | null;
+  player_payment_id?: number | string | null;
+  payment_component?: 'MAIN' | 'REMAINING' | string | null;
+  is_synced?: boolean;
   invoice_url?: string;
   invoice_path?: string;
   created_by: string;

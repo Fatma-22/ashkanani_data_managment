@@ -33,6 +33,15 @@ export const ownerService = {
         return response.data;
     },
 
+    // People directory (athletes, coaches, employees, agents, admins & members)
+    searchPersons: async (q?: string, type?: string): Promise<any[]> => {
+        const params: Record<string, any> = {};
+        if (q) params.q = q;
+        if (type && type !== 'all') params.type = type;
+        const response: any = await apiClient.get('/owner/financials/persons', { params });
+        return response.data?.data || response.data || [];
+    },
+
     // Admins
     getAdmins: async (): Promise<any[]> => {
         const response: any = await apiClient.get('/owner/admins');

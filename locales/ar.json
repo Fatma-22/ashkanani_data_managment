@@ -1383,6 +1383,8 @@
             "edit_record": "تعديل سجل",
             "delete_record_title": "حذف سجل",
             "delete_record_confirm": "هل أنت متأكد من حذف {{description}}؟",
+            "delete_synced_confirm": "هذا السجل مرتبط بدفعة لاعب، وسيتم حذف الدفعة من صفحة اللاعب أيضاً. هل أنت متأكد من حذف {{description}}؟",
+            "delete_remaining_confirm": "هذا السجل يمثل المبلغ المتبقي، وحذفه يعني اعتبار الدفعة مدفوعة بالكامل. هل أنت متأكد من حذف {{description}}؟",
             "load_failed": "فشل تحميل البيانات المالية",
             "delete_success": "تم حذف السجل بنجاح",
             "delete_failed": "فشل حذف السجل",
@@ -1416,6 +1418,36 @@
             "category_breakdown": "تفصيل الفئات",
             "chart_placeholder": "الرسم البياني سيكون متاحاً في الإنتاج",
             "actions": "الإجراءات",
+            "search_placeholder": "ابحث بالاسم أو الوصف أو المبلغ أو رقم الفاتورة...",
+            "person_search_placeholder": "ابحث عن لاعب، مدرب، موظف، وكيل...",
+            "link_person": "ربط بشخص مسجل في الموقع",
+            "link_person_hint": "عند اختيار لاعب سيتم إنشاء أو تحديث دفعة في صفحة اللاعب تلقائياً.",
+            "person_type": "نوع الشخص",
+            "all_person_types": "كل الأشخاص",
+            "search_results": "{{count}} نتيجة",
+            "clear_filters": "مسح الفلاتر",
+            "min_amount": "أقل مبلغ",
+            "max_amount": "أعلى مبلغ",
+            "synced_badge": "متزامن",
+            "person_types": {
+                "player": "لاعب / رياضي",
+                "employee": "موظف",
+                "agent": "وكيل",
+                "admin": "إداري",
+                "member": "عضو"
+            },
+            "person_roles": {
+                "PLAYER": "رياضي",
+                "COACH": "مدرب",
+                "ADMINISTRATOR": "إداري",
+                "REFEREE": "حكم",
+                "PHOTOGRAPHER": "مصور",
+                "DESIGNER": "مصمم",
+                "EMPLOYEE": "موظف",
+                "AGENT": "وكيل",
+                "ADMIN": "إداري",
+                "MEMBER": "عضو"
+            },
             "categories": {
                 "Commission": "عمولة",
                 "Marketing": "تسويق",
@@ -1423,6 +1455,7 @@
                 "Salary": "راتب",
                 "Bonus": "مكافأة",
                 "Sponsorship": "رعاية",
+                "PlayerPayment": "دفعة لاعب",
                 "Other": "أخرى"
             }
         },
@@ -1768,6 +1801,9 @@
         "total_remaining": "إجمالي المتبقي",
         "load_error": "فشل تحميل المدفوعات",
         "delete_confirm": "هل تريد حذف هذه الدفعة؟",
+        "delete_synced_confirm": "سيتم حذف السجل المالي المرتبط بها أيضاً.",
+        "synced_notice": "تتم مزامنة المدفوعات تلقائياً مع السجل المالي (دخل / متأخرات) وتظهر هناك فوراً.",
+        "synced_badge": "مرتبط بالسجل المالي",
         "statuses": {
             "PENDING": "قيد الانتظار",
             "PARTIAL": "مدفوعة جزئياً",

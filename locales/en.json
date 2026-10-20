@@ -1175,6 +1175,8 @@
             "edit_record": "Edit Record",
             "delete_record_title": "Delete Record",
             "delete_record_confirm": "Are you sure you want to delete {{description}}?",
+            "delete_synced_confirm": "This record is linked to a player payment; the payment will also be deleted from the player profile. Delete {{description}}?",
+            "delete_remaining_confirm": "This row represents the remaining amount; deleting it marks the payment as fully paid. Delete {{description}}?",
             "load_failed": "Failed to load financial data",
             "delete_success": "Record deleted successfully",
             "delete_failed": "Failed to delete record",
@@ -1208,6 +1210,36 @@
             "category_breakdown": "Category Breakdown",
             "chart_placeholder": "Charts will be available in production",
             "actions": "Actions",
+            "search_placeholder": "Search by name, description, amount, invoice...",
+            "person_search_placeholder": "Search an athlete, coach, employee, agent...",
+            "link_person": "Link to a person registered on the website",
+            "link_person_hint": "Selecting an athlete automatically creates/updates a payment on their profile.",
+            "person_type": "Person type",
+            "all_person_types": "All people",
+            "search_results": "{{count}} results",
+            "clear_filters": "Clear filters",
+            "min_amount": "Min amount",
+            "max_amount": "Max amount",
+            "synced_badge": "Synced",
+            "person_types": {
+                "player": "Athlete / Player",
+                "employee": "Employee",
+                "agent": "Agent",
+                "admin": "Admin",
+                "member": "Member"
+            },
+            "person_roles": {
+                "PLAYER": "Athlete",
+                "COACH": "Coach",
+                "ADMINISTRATOR": "Administrator",
+                "REFEREE": "Referee",
+                "PHOTOGRAPHER": "Photographer",
+                "DESIGNER": "Designer",
+                "EMPLOYEE": "Employee",
+                "AGENT": "Agent",
+                "ADMIN": "Admin",
+                "MEMBER": "Member"
+            },
             "categories": {
                 "Commission": "Commission",
                 "Marketing": "Marketing",
@@ -1215,6 +1247,7 @@
                 "Salary": "Salary",
                 "Bonus": "Bonus",
                 "Sponsorship": "Sponsorship",
+                "PlayerPayment": "Player Payment",
                 "Other": "Other"
             }
         },
@@ -1652,6 +1685,9 @@
         "total_remaining": "Total Remaining",
         "load_error": "Failed to load payments",
         "delete_confirm": "Delete this payment?",
+        "delete_synced_confirm": "The linked financial ledger record will be deleted too.",
+        "synced_notice": "Payments are automatically synced with the financial ledger (income / arrears) and appear there immediately.",
+        "synced_badge": "Linked to financial ledger",
         "statuses": {
             "PENDING": "Pending",
             "PARTIAL": "Partial",

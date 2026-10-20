@@ -1,11 +1,11 @@
 import { FC, useEffect, useState } from 'react';
 import {
     Card, Button, Space, Modal, Form, Input, InputNumber, Select, DatePicker,
-    message, Typography, Row, Col, Statistic, Table, Tag, Upload, Tooltip, Popconfirm
+    message, Typography, Row, Col, Statistic, Table, Tag, Upload, Tooltip, Popconfirm, Alert
 } from 'antd';
 import {
     PlusOutlined, EditOutlined, DeleteOutlined, LockOutlined,
-    UploadOutlined, PaperClipOutlined, DollarOutlined
+    UploadOutlined, PaperClipOutlined, DollarOutlined, LinkOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
@@ -193,6 +193,19 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
             ),
         },
         {
+            title: t('player_payments.ledger', { defaultValue: 'Financial ledger' }),
+            key: 'ledger',
+            render: (_: any, r: PlayerPayment) => (
+                r.is_synced ? (
+                    <Tooltip title={t('player_payments.synced_notice', { defaultValue: 'Synced with the financial ledger' })}>
+                        <Tag color="green" icon={<LinkOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}>
+                            {t('player_payments.synced_badge', { defaultValue: 'Linked' })}
+                        </Tag>
+                    </Tooltip>
+                ) : <Text type="secondary">-</Text>
+            ),
+        },
+        {
             title: t('player_payments.receipt', { defaultValue: 'Receipt' }),
             key: 'receipt',
             render: (_: any, r: PlayerPayment) => (
@@ -217,6 +230,7 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                     <Button type="link" size="small" icon={<EditOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} onClick={() => handleEdit(r)} />
                     <Popconfirm
                         title={t('player_payments.delete_confirm', { defaultValue: 'Delete this payment?' })}
+                        description={r.is_synced ? t('player_payments.delete_synced_confirm', { defaultValue: 'The linked financial ledger record will be deleted too.' }) : undefined}
                         onConfirm={() => handleDelete(r)}
                         okText={t('common.yes', { defaultValue: 'Yes' })}
                         cancelText={t('common.no', { defaultValue: 'No' })}
@@ -254,6 +268,14 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                     <Statistic title={t('player_payments.total_remaining', { defaultValue: 'Total Remaining' })} value={totals.remaining} valueStyle={{ color: totals.remaining > 0 ? '#ff4d4f' : '#52c41a' }} precision={2} />
                 </Col>
             </Row>
+
+            <Alert
+                type="info"
+                showIcon
+                icon={<LinkOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                message={t('player_payments.synced_notice', { defaultValue: 'Payments are automatically synced with the financial ledger.' })}
+                style={{ marginBottom: 16 }}
+            />
 
             <Table
                 rowKey="id"
