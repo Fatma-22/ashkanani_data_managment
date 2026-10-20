@@ -83,6 +83,7 @@ export const OwnerFinancials: React.FC = () => {
     const [filterPerson, setFilterPerson] = useState<any | null>(null);
     const [modalPersonOptions, setModalPersonOptions] = useState<any[]>([]);
     const [modalPersonLoading, setModalPersonLoading] = useState(false);
+    const [modalPersonType, setModalPersonType] = useState<string>('all');
     const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
     const personTimer = useRef<any>(null);
     const modalPersonTimer = useRef<any>(null);
@@ -153,10 +154,10 @@ export const OwnerFinancials: React.FC = () => {
         personTimer.current = setTimeout(() => loadPersons(term, type), 350);
     };
 
-    const loadModalPersons = async (term: string) => {
+    const loadModalPersons = async (term: string, type: string = 'all') => {
         setModalPersonLoading(true);
         try {
-            const data = await ownerService.searchPersons(term);
+            const data = await ownerService.searchPersons(term, type);
             setModalPersonOptions(Array.isArray(data) ? data : []);
         } catch (error) {
             setModalPersonOptions([]);
@@ -165,9 +166,9 @@ export const OwnerFinancials: React.FC = () => {
         }
     };
 
-    const scheduleModalPersonSearch = (term: string) => {
+    const scheduleModalPersonSearch = (term: string, type: string = 'all') => {
         if (modalPersonTimer.current) clearTimeout(modalPersonTimer.current);
-        modalPersonTimer.current = setTimeout(() => loadModalPersons(term), 350);
+        modalPersonTimer.current = setTimeout(() => loadModalPersons(term, type), 350);
     };
 
     const personRoleLabel = (person: any) => {
@@ -350,6 +351,7 @@ export const OwnerFinancials: React.FC = () => {
         setRemoveInvoice(false);
         setSelectedPerson(null);
         setModalPersonOptions([]);
+        setModalPersonType('all');
         form.setFieldsValue({
             type: 'income',
             currency: 'USD',
@@ -368,6 +370,7 @@ export const OwnerFinancials: React.FC = () => {
 
         setSelectedPerson(relatedPerson);
         setModalPersonOptions(relatedPerson ? [relatedPerson] : []);
+        setModalPersonType('all');
 
         form.setFieldsValue({
             ...record,
@@ -1118,6 +1121,26 @@ export const OwnerFinancials: React.FC = () => {
                                     <DatePicker style={{ width: '100%' }} />
                                 </Form.Item>
 
+                                <Form.Item label={t('owner.financials.person_type', { defaultValue: 'Person type' })}>
+                                    <Select
+                                        value={modalPersonType}
+                                        onChange={(value) => {
+                                            setModalPersonType(value);
+                                            setModalPersonOptions([]);
+                                            loadModalPersons('', value);
+                                        }}
+                                        options={[
+                                            { value: 'all', label: t('owner.financials.all_person_types', { defaultValue: 'All people' }) },
+                                            { value: 'player', label: t('owner.financials.person_types.player', { defaultValue: 'Athlete / Player' }) },
+                                            { value: 'coach', label: t('owner.financials.person_types.coach', { defaultValue: 'Coach' }) },
+                                            { value: 'employee', label: t('owner.financials.person_types.employee', { defaultValue: 'Employee' }) },
+                                            { value: 'agent', label: t('owner.financials.person_types.agent', { defaultValue: 'Agent' }) },
+                                            { value: 'admin', label: t('owner.financials.person_types.admin', { defaultValue: 'Admin' }) },
+                                            { value: 'member', label: t('owner.financials.person_types.member', { defaultValue: 'Member' }) },
+                                        ]}
+                                    />
+                                </Form.Item>
+
                                 <Form.Item label={t('owner.financials.link_person', { defaultValue: 'Link to a person on the website' })}>
                                     <Select
                                         showSearch
@@ -1125,8 +1148,8 @@ export const OwnerFinancials: React.FC = () => {
                                         filterOption={false}
                                         value={selectedPerson?.key}
                                         loading={modalPersonLoading}
-                                        onSearch={scheduleModalPersonSearch}
-                                        onFocus={() => { if (modalPersonOptions.length === 0) loadModalPersons(''); }}
+                                        onSearch={(value) => scheduleModalPersonSearch(value, modalPersonType)}
+                                        onFocus={() => { if (modalPersonOptions.length === 0) loadModalPersons('', modalPersonType); }}
                                         onChange={(_key: any, option: any) => {
                                             const person = option?.person || null;
                                             setSelectedPerson(person);

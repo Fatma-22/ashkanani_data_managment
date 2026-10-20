@@ -1213,7 +1213,7 @@
             "search_placeholder": "Search by name, description, amount, invoice...",
             "person_search_placeholder": "Search an athlete, coach, employee, agent...",
             "link_person": "Link to a person registered on the website",
-            "link_person_hint": "Selecting an athlete automatically creates/updates a payment on their profile.",
+            "link_person_hint": "Search by name, phone, email or national ID for any registered person: player, coach, employee, agent, admin or member. Selecting a player/coach automatically creates a payment on their profile.",
             "person_type": "Person type",
             "all_person_types": "All people",
             "search_results": "{{count}} results",
@@ -1223,6 +1223,7 @@
             "synced_badge": "Synced",
             "person_types": {
                 "player": "Athlete / Player",
+                "coach": "Coach",
                 "employee": "Employee",
                 "agent": "Agent",
                 "admin": "Admin",
@@ -1238,7 +1239,12 @@
                 "EMPLOYEE": "Employee",
                 "AGENT": "Agent",
                 "ADMIN": "Admin",
-                "MEMBER": "Member"
+                "MEMBER": "Member",
+                "PUBLIC": "Member",
+                "OWNER": "Website Owner",
+                "SCOUT": "Scout",
+                "CLUB": "Club",
+                "OTHER": "Other"
             },
             "categories": {
                 "Commission": "Commission",
