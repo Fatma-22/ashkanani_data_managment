@@ -5,13 +5,13 @@ import {
 } from 'antd';
 import {
     PlusOutlined, EditOutlined, DeleteOutlined, LockOutlined,
-    UploadOutlined, PaperClipOutlined, DollarOutlined, LinkOutlined
+    UploadOutlined, PaperClipOutlined, DollarOutlined, LinkOutlined, SwapOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import { PlayerPayment } from '../types';
 import { playerService } from '../services/playerService';
-import { formatDate, getCurrencySymbol } from '../utils/helpers';
+import { formatCurrency, formatDate, getCurrencySymbol } from '../utils/helpers';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -28,7 +28,7 @@ const PAYMENT_STATUS_COLORS: Record<string, string> = {
 };
 
 const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [payments, setPayments] = useState<PlayerPayment[]>([]);
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
@@ -37,6 +37,9 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
     const [removeReceipt, setRemoveReceipt] = useState(false);
     const [saving, setSaving] = useState(false);
     const [form] = Form.useForm();
+    const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'KWD'>('USD');
+    const [rates, setRates] = useState<Record<string, number>>({ USD: 1, KWD: 0.307, EUR: 0.92 });
+    const [isFetchingRate, setIsFetchingRate] = useState(false);
 
     const formCurrency = Form.useWatch('currency', form) || 'USD';
     const symbol = getCurrencySymbol(formCurrency);
@@ -57,11 +60,38 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
         if (playerId) loadPayments();
     }, [playerId]);
 
+    useEffect(() => {
+        const fetchRates = async () => {
+            setIsFetchingRate(true);
+            try {
+                const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const data = await res.json();
+                if (data?.rates) {
+                    setRates(data.rates);
+                }
+            } catch (error) {
+                console.warn('Failed to fetch exchange rates', error);
+            } finally {
+                setIsFetchingRate(false);
+            }
+        };
+        fetchRates();
+    }, []);
+
+    const convertAmount = (amount: number, fromCurrency?: string) => {
+        if (!amount) return 0;
+        const from = (fromCurrency || 'USD').toUpperCase();
+        const rateFrom = rates[from] || 1;
+        const rateTo = rates[displayCurrency] || 1;
+        return (amount / rateFrom) * rateTo;
+    };
+
     const totals = payments.reduce(
         (acc, p) => {
-            acc.total += Number(p.total_amount) || 0;
-            acc.paid += Number(p.paid_amount) || 0;
-            acc.remaining += Number(p.remaining_amount ?? (Number(p.total_amount) - Number(p.paid_amount))) || 0;
+            const currency = p.currency || 'USD';
+            acc.total += convertAmount(Number(p.total_amount) || 0, currency);
+            acc.paid += convertAmount(Number(p.paid_amount) || 0, currency);
+            acc.remaining += convertAmount(Number(p.remaining_amount ?? (Number(p.total_amount) - Number(p.paid_amount))) || 0, currency);
             return acc;
         },
         { total: 0, paid: 0, remaining: 0 }
@@ -143,6 +173,25 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
         }
     };
 
+    const renderMoney = (amount: number, currency?: string, color?: string) => {
+        const originalCurrency = (currency || 'USD').toUpperCase();
+        const converted = convertAmount(amount, originalCurrency);
+        const isDifferent = originalCurrency !== displayCurrency;
+
+        return (
+            <Space direction="vertical" size={0}>
+                <Text strong style={color ? { color } : undefined}>
+                    {formatCurrency(converted, displayCurrency)}
+                </Text>
+                {isDifferent && (
+                    <Text type="secondary" style={{ fontSize: 10 }}>
+                        {formatCurrency(amount, originalCurrency)}
+                    </Text>
+                )}
+            </Space>
+        );
+    };
+
     const columns = [
         {
             title: t('player_payments.title_col', { defaultValue: 'Title' }),
@@ -153,21 +202,19 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
         {
             title: t('player_payments.total', { defaultValue: 'Total' }),
             key: 'total_amount',
-            render: (_: any, r: PlayerPayment) => `${getCurrencySymbol(r.currency)} ${Number(r.total_amount).toLocaleString()}`,
+            render: (_: any, r: PlayerPayment) => renderMoney(Number(r.total_amount) || 0, r.currency),
         },
         {
             title: t('player_payments.paid', { defaultValue: 'Paid' }),
             key: 'paid_amount',
-            render: (_: any, r: PlayerPayment) => (
-                <Text style={{ color: '#52c41a' }}>{`${getCurrencySymbol(r.currency)} ${Number(r.paid_amount).toLocaleString()}`}</Text>
-            ),
+            render: (_: any, r: PlayerPayment) => renderMoney(Number(r.paid_amount) || 0, r.currency, '#52c41a'),
         },
         {
             title: t('player_payments.remaining', { defaultValue: 'Remaining' }),
             key: 'remaining_amount',
             render: (_: any, r: PlayerPayment) => {
                 const remaining = Number(r.remaining_amount ?? (Number(r.total_amount) - Number(r.paid_amount)));
-                return <Text style={{ color: remaining > 0 ? '#ff4d4f' : '#52c41a' }}>{`${getCurrencySymbol(r.currency)} ${remaining.toLocaleString()}`}</Text>;
+                return renderMoney(remaining, r.currency, remaining > 0 ? '#ff4d4f' : '#52c41a');
             },
         },
         {
@@ -252,20 +299,46 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                 </Space>
             }
             extra={
-                <Button type="primary" icon={<PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} onClick={handleCreate} style={{ background: '#C9A24D', borderColor: '#C9A24D' }}>
-                    {t('player_payments.add', { defaultValue: 'Add Payment' })}
-                </Button>
+                <Space wrap>
+                    <Button
+                        icon={<SwapOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                        loading={isFetchingRate}
+                        onClick={() => setDisplayCurrency(prev => prev === 'USD' ? 'KWD' : 'USD')}
+                    >
+                        {displayCurrency === 'USD'
+                            ? (i18n.language === 'ar' ? 'عرض بالدينار (KWD)' : 'Show in KWD')
+                            : (i18n.language === 'ar' ? 'عرض بالدولار (USD)' : 'Show in USD')}
+                    </Button>
+                    <Button type="primary" icon={<PlusOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} onClick={handleCreate} style={{ background: '#C9A24D', borderColor: '#C9A24D' }}>
+                        {t('player_payments.add', { defaultValue: 'Add Payment' })}
+                    </Button>
+                </Space>
             }
         >
             <Row gutter={[16, 16]} className="mb-4">
                 <Col xs={24} sm={8}>
-                    <Statistic title={t('player_payments.total_amount', { defaultValue: 'Total Amount' })} value={totals.total} prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />} precision={2} />
+                    <Statistic
+                        title={t('player_payments.total_amount', { defaultValue: 'Total Amount' })}
+                        value={totals.total}
+                        prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
+                        formatter={(value) => formatCurrency(Number(value), displayCurrency)}
+                    />
                 </Col>
                 <Col xs={24} sm={8}>
-                    <Statistic title={t('player_payments.total_paid', { defaultValue: 'Total Paid' })} value={totals.paid} valueStyle={{ color: '#52c41a' }} precision={2} />
+                    <Statistic
+                        title={t('player_payments.total_paid', { defaultValue: 'Total Paid' })}
+                        value={totals.paid}
+                        valueStyle={{ color: '#52c41a' }}
+                        formatter={(value) => formatCurrency(Number(value), displayCurrency)}
+                    />
                 </Col>
                 <Col xs={24} sm={8}>
-                    <Statistic title={t('player_payments.total_remaining', { defaultValue: 'Total Remaining' })} value={totals.remaining} valueStyle={{ color: totals.remaining > 0 ? '#ff4d4f' : '#52c41a' }} precision={2} />
+                    <Statistic
+                        title={t('player_payments.total_remaining', { defaultValue: 'Total Remaining' })}
+                        value={totals.remaining}
+                        valueStyle={{ color: totals.remaining > 0 ? '#ff4d4f' : '#52c41a' }}
+                        formatter={(value) => formatCurrency(Number(value), displayCurrency)}
+                    />
                 </Col>
             </Row>
 
@@ -273,7 +346,15 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                 type="info"
                 showIcon
                 icon={<LinkOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                message={t('player_payments.synced_notice', { defaultValue: 'Payments are automatically synced with the financial ledger.' })}
+                message={
+                    <span>
+                        {t('player_payments.synced_notice', { defaultValue: 'Payments are automatically synced with the financial ledger.' })}
+                        <br />
+                        {t('player_payments.currency_notice', {
+                            defaultValue: 'Amounts are converted according to each payment currency and the current USD-based exchange rate; the original entry currency is preserved.',
+                        })}
+                    </span>
+                }
                 style={{ marginBottom: 16 }}
             />
 

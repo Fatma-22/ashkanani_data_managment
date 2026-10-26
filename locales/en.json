@@ -1693,6 +1693,7 @@
         "delete_confirm": "Delete this payment?",
         "delete_synced_confirm": "The linked financial ledger record will be deleted too.",
         "synced_notice": "Payments are automatically synced with the financial ledger (income / arrears) and appear there immediately.",
+        "currency_notice": "Amounts are converted using each payment currency and the current exchange rate, while preserving the original entry currency.",
         "synced_badge": "Linked to financial ledger",
         "statuses": {
             "PENDING": "Pending",

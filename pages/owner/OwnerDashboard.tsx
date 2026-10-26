@@ -165,8 +165,20 @@ export const OwnerDashboard: React.FC = () => {
     const loadGlobalData = async () => {
         setLoading(true);
         try {
+            // Use the same USD-based rates as the financial page so all aggregates are consistent.
+            let fxRates: Record<string, number> = { USD: 1, KWD: 0.307, EUR: 0.92 };
+            try {
+                const rateRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const rateData = await rateRes.json();
+                if (rateData?.rates) {
+                    fxRates = rateData.rates;
+                }
+            } catch (rateError) {
+                console.warn('Using fallback exchange rates', rateError);
+            }
+
             const [financialData, adminData, employeeData, allFinRecords, dashboardData, nutritionData] = await Promise.all([
-                ownerService.getFinancialStats(),
+                ownerService.getFinancialStats({ rates: JSON.stringify(fxRates) }),
                 ownerService.getAdmins(),
                 ownerService.getEmployees(),
                 ownerService.getFinancialRecords(),
@@ -199,13 +211,17 @@ export const OwnerDashboard: React.FC = () => {
             }
 
             try {
+                const toUsd = (record: any) => {
+                    const currency = (record.currency || 'USD').toUpperCase();
+                    return (Number(record.amount) || 0) / (fxRates[currency] || 1);
+                };
                 const months = Array.from({ length: 6 }, (_, i) => dayjs().subtract(5 - i, 'month'));
                 const series = months.map(m => {
                     const monthKey = m.format('MMM YYYY');
                     const prefix = m.format('YYYY-MM');
-                    const income = allFinRecords.filter(r => r.type?.toLowerCase() === 'income' && (r.transaction_date || r.date)?.startsWith(prefix)).reduce((s, r) => s + (r.amount || 0), 0);
-                    const expense = allFinRecords.filter(r => r.type?.toLowerCase() === 'expense' && (r.transaction_date || r.date)?.startsWith(prefix)).reduce((s, r) => s + (r.amount || 0), 0);
-                    const arrears = allFinRecords.filter(r => r.type?.toLowerCase() === 'arrears' && (r.transaction_date || r.date)?.startsWith(prefix)).reduce((s, r) => s + (r.amount || 0), 0);
+                    const income = allFinRecords.filter(r => r.type?.toLowerCase() === 'income' && (r.transaction_date || r.date)?.startsWith(prefix)).reduce((s, r) => s + toUsd(r), 0);
+                    const expense = allFinRecords.filter(r => r.type?.toLowerCase() === 'expense' && (r.transaction_date || r.date)?.startsWith(prefix)).reduce((s, r) => s + toUsd(r), 0);
+                    const arrears = allFinRecords.filter(r => r.type?.toLowerCase() === 'arrears' && (r.transaction_date || r.date)?.startsWith(prefix)).reduce((s, r) => s + toUsd(r), 0);
                     return { month: monthKey, income, expense, arrears };
                 });
                 setMonthlyFinancialData(series);

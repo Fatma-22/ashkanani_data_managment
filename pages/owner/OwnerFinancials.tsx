@@ -126,7 +126,7 @@ export const OwnerFinancials: React.FC = () => {
 
     useEffect(() => {
         loadFinancials();
-    }, [filters, i18n.language]);
+    }, [filters, i18n.language, rates]);
 
     // Debounced server-side search (professional search engine)
     useEffect(() => {
@@ -234,7 +234,7 @@ export const OwnerFinancials: React.FC = () => {
         try {
             const [recordsData, statsData] = await Promise.all([
                 ownerService.getFinancialRecords(filters),
-                ownerService.getFinancialStats(),
+                ownerService.getFinancialStats({ rates: JSON.stringify(rates) }),
             ]);
             // Backend returns uppercase enums, frontend expects lowercase for Tag colors or consistent display
             const normalizedRecords = recordsData.map((r: any) => {
@@ -296,7 +296,9 @@ export const OwnerFinancials: React.FC = () => {
         }
 
         records.forEach((r) => {
-            const amount = Number(r.amount) || 0;
+            const rawAmount = Number(r.amount) || 0;
+            const currency = (r.currency || 'USD').toUpperCase();
+            const amount = rawAmount / (rates[currency] || 1);
             const dateValue = r.date;
 
             if (amount === 0 || !dateValue) return;
@@ -320,7 +322,9 @@ export const OwnerFinancials: React.FC = () => {
         // Category breakdown
         const catMap: Record<string, { nameEn: string, nameAr: string, value: number }> = {};
         records.forEach((r) => {
-            const amount = Number(r.amount) || 0;
+            const rawAmount = Number(r.amount) || 0;
+            const currency = (r.currency || 'USD').toUpperCase();
+            const amount = rawAmount / (rates[currency] || 1);
             if (amount === 0) return;
 
             const key = r.category || 'Other';
