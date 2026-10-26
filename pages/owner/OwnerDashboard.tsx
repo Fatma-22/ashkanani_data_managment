@@ -838,7 +838,7 @@ export const OwnerDashboard: React.FC = () => {
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('owner.dashboard.total_income')}
-                                                    value={formatCurrency(financialStats.totalIncome, i18n.language)}
+                                                    value={formatCurrency(financialStats.totalIncome, 'USD')}
                                                     prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#C9A24D]" />}
                                                     valueStyle={{ color: '#C9A24D', fontWeight: 'bold' }}
                                                     loading={loading}
@@ -849,7 +849,7 @@ export const OwnerDashboard: React.FC = () => {
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('owner.dashboard.total_expense')}
-                                                    value={formatCurrency(financialStats.totalExpense, i18n.language)}
+                                                    value={formatCurrency(financialStats.totalExpense, 'USD')}
                                                     prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#f5222d]" />}
                                                     valueStyle={{ color: '#f5222d', fontWeight: 'bold' }}
                                                     loading={loading}
@@ -860,7 +860,7 @@ export const OwnerDashboard: React.FC = () => {
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('owner.dashboard.total_arrears')}
-                                                    value={formatCurrency(financialStats.totalArrears || 0, i18n.language)}
+                                                    value={formatCurrency(financialStats.totalArrears || 0, 'USD')}
                                                     prefix={<HistoryOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#faad14]" />}
                                                     valueStyle={{ color: '#faad14', fontWeight: 'bold' }}
                                                     loading={loading}
@@ -871,7 +871,7 @@ export const OwnerDashboard: React.FC = () => {
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('owner.dashboard.net_profit')}
-                                                    value={formatCurrency(financialStats.netProfit, i18n.language)}
+                                                    value={formatCurrency(financialStats.netProfit, 'USD')}
                                                     prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className={financialStats.netProfit >= 0 ? "text-[#52c41a]" : "text-[#f5222d]"} />}
                                                     valueStyle={{ color: financialStats.netProfit >= 0 ? '#52c41a' : '#f5222d', fontWeight: 'bold' }}
                                                     loading={loading}
@@ -882,7 +882,7 @@ export const OwnerDashboard: React.FC = () => {
                                             <Card className="card-hover">
                                                 <Statistic
                                                     title={t('owner.dashboard.monthly_profit')}
-                                                    value={formatCurrency(financialStats.monthlyIncome - financialStats.monthlyExpense, i18n.language)}
+                                                    value={formatCurrency(financialStats.monthlyIncome - financialStats.monthlyExpense, 'USD')}
                                                     prefix={<RiseOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className={financialStats.monthlyIncome - financialStats.monthlyExpense >= 0 ? "text-[#52c41a]" : "text-[#f5222d]"} />}
                                                     valueStyle={{ color: financialStats.monthlyIncome - financialStats.monthlyExpense >= 0 ? '#52c41a' : '#f5222d', fontWeight: 'bold' }}
                                                     loading={loading}

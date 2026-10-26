@@ -95,7 +95,7 @@ export const OwnerFinancials: React.FC = () => {
     const [removeInvoice, setRemoveInvoice] = useState(false);
 
     const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'KWD'>('USD');
-    const [rates, setRates] = useState<Record<string, number>>({ USD: 1, KWD: 0.308, EUR: 0.92 });
+    const [rates, setRates] = useState<Record<string, number>>({ USD: 1, KWD: 0.307, EUR: 0.92 });
     const [isFetchingRate, setIsFetchingRate] = useState(false);
 
     useEffect(() => {
@@ -541,7 +541,22 @@ export const OwnerFinancials: React.FC = () => {
             title: t('owner.financials.amount'),
             dataIndex: 'amount',
             key: 'amount',
-            render: (amount: number, record: FinancialRecord) => formatCurrency(convertAmount(amount, record.currency || 'USD'), displayCurrency, true),
+            render: (amount: number, record: FinancialRecord) => {
+                const originalCurrency = (record.currency || 'USD').toUpperCase();
+                const converted = convertAmount(amount, originalCurrency);
+                const isDifferent = originalCurrency !== displayCurrency;
+
+                return (
+                    <Space direction="vertical" size={0}>
+                        <Text strong>{formatCurrency(converted, displayCurrency, true)}</Text>
+                        {isDifferent && (
+                            <Text type="secondary" style={{ fontSize: 10 }}>
+                                {formatCurrency(amount, originalCurrency, true)}
+                            </Text>
+                        )}
+                    </Space>
+                );
+            },
         },
         {
             title: t('owner.financials.related_to'),

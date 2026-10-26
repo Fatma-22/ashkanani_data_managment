@@ -97,15 +97,31 @@ export const OwnerReports: React.FC = () => {
         setLoading(true);
         try {
             if (reportType === 'financial') {
+                let fxRates: Record<string, number> = { USD: 1, KWD: 0.307, EUR: 0.92 };
+                try {
+                    const rateRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                    const rateData = await rateRes.json();
+                    if (rateData?.rates) {
+                        fxRates = rateData.rates;
+                    }
+                } catch (rateError) {
+                    console.warn('Using fallback exchange rates', rateError);
+                }
+
                 const filters = {
                     start_date: dateRange?.[0]?.format('YYYY-MM-DD'),
                     end_date: dateRange?.[1]?.format('YYYY-MM-DD'),
                     sport: (user as any)?.sport || undefined
                 };
                 const [stats, records] = await Promise.all([
-                    ownerService.getFinancialStats(filters),
+                    ownerService.getFinancialStats({ ...filters, rates: JSON.stringify(fxRates) }),
                     ownerService.getFinancialRecords(filters)
                 ]);
+
+                const toUsd = (record: any) => {
+                    const currency = (record.currency || 'USD').toUpperCase();
+                    return Number(record.amount || 0) / (fxRates[currency] || 1);
+                };
 
                 setReportData({
                     summary: {
@@ -116,13 +132,13 @@ export const OwnerReports: React.FC = () => {
                     },
                     incomeByCategory: Object.entries(
                         records.filter((r: any) => r.type.toUpperCase() === 'INCOME').reduce((acc: any, curr: any) => {
-                            acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount || 0);
+                            acc[curr.category] = (acc[curr.category] || 0) + toUsd(curr);
                             return acc;
                         }, {})
                     ).map(([category, amount]) => ({ category, amount })),
                     expenseByCategory: Object.entries(
                         records.filter((r: any) => r.type.toUpperCase() === 'EXPENSE').reduce((acc: any, curr: any) => {
-                            acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount || 0);
+                            acc[curr.category] = (acc[curr.category] || 0) + toUsd(curr);
                             return acc;
                         }, {})
                     ).map(([category, amount]) => ({ category, amount })),
@@ -177,9 +193,9 @@ export const OwnerReports: React.FC = () => {
 
                 setReportData({
                     summary: {
-                        totalContracts: total || players.length,
+                        totalContracts: stats.totalPlayers,
                         expiringSoon: stats.expiringSoon,
-                        activeContracts: activePlayers.length,
+                        activeContracts: stats.activeContracts,
                         totalValue: stats.totalMarketValue,
                     },
                     contractDetails: players.map((p: any) => {
@@ -355,7 +371,7 @@ export const OwnerReports: React.FC = () => {
                             value={reportData?.summary.totalIncome}
                             prefix={<BarChartOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#52c41a]" />}
                             valueStyle={{ color: '#3F3F3F', fontWeight: 'bold' }}
-                            formatter={(value) => formatCurrency(value as number, i18n.language)}
+                            formatter={(value) => formatCurrency(value as number, 'USD')}
                         />
                     </Card>
                 </Col>
@@ -366,7 +382,7 @@ export const OwnerReports: React.FC = () => {
                             value={reportData?.summary.totalExpense}
                             prefix={<LineChartOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#f5222d]" />}
                             valueStyle={{ color: '#3F3F3F', fontWeight: 'bold' }}
-                            formatter={(value) => formatCurrency(value as number, i18n.language)}
+                            formatter={(value) => formatCurrency(value as number, 'USD')}
                         />
                     </Card>
                 </Col>
@@ -377,7 +393,7 @@ export const OwnerReports: React.FC = () => {
                             value={reportData?.summary.netProfit}
                             prefix={<PieChartOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} className="text-[#52c41a]" />}
                             valueStyle={{ color: '#3F3F3F', fontWeight: 'bold' }}
-                            formatter={(value) => formatCurrency(value as number, i18n.language)}
+                            formatter={(value) => formatCurrency(value as number, 'USD')}
                         />
                     </Card>
                 </Col>
@@ -410,7 +426,7 @@ export const OwnerReports: React.FC = () => {
                             title: t('owner.reports.amount'),
                             dataIndex: 'amount',
                             key: 'amount',
-                            render: (amount: number) => formatCurrency(amount, i18n.language)
+                            render: (amount: number) => formatCurrency(amount, 'USD')
                         },
                     ].filter(c => getActiveFields().includes(c.key as string))}
                     pagination={false}
@@ -434,7 +450,7 @@ export const OwnerReports: React.FC = () => {
                             title: t('owner.reports.amount'),
                             dataIndex: 'amount',
                             key: 'amount',
-                            render: (amount: number) => formatCurrency(amount, i18n.language)
+                            render: (amount: number) => formatCurrency(amount, 'USD')
                         },
                     ].filter(c => getActiveFields().includes(c.key as string))}
                     pagination={false}
@@ -849,7 +865,7 @@ export const OwnerReports: React.FC = () => {
                                                 key: 'category',
                                                 render: (category: string) => t(`owner.financials.categories.${category}`, { defaultValue: category })
                                             },
-                                            { title: t('owner.reports.amount'), dataIndex: 'amount', key: 'amount', render: (val: any) => formatCurrency(val, i18n.language) }
+                                            { title: t('owner.reports.amount'), dataIndex: 'amount', key: 'amount', render: (val: any) => formatCurrency(val, 'USD') }
                                         ],
                                         performance: [
                                             { title: t('common.name'), dataIndex: 'name', key: 'name' },

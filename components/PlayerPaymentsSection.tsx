@@ -181,11 +181,11 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
         return (
             <Space direction="vertical" size={0}>
                 <Text strong style={color ? { color } : undefined}>
-                    {formatCurrency(converted, displayCurrency)}
+                    {formatCurrency(converted, displayCurrency, true)}
                 </Text>
                 {isDifferent && (
                     <Text type="secondary" style={{ fontSize: 10 }}>
-                        {formatCurrency(amount, originalCurrency)}
+                        {formatCurrency(amount, originalCurrency, true)}
                     </Text>
                 )}
             </Space>
@@ -321,7 +321,7 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                         title={t('player_payments.total_amount', { defaultValue: 'Total Amount' })}
                         value={totals.total}
                         prefix={<DollarOutlined onPointerEnterCapture={undefined} onPointerLeaveCapture={undefined} />}
-                        formatter={(value) => formatCurrency(Number(value), displayCurrency)}
+                        formatter={(value) => formatCurrency(Number(value), displayCurrency, true)}
                     />
                 </Col>
                 <Col xs={24} sm={8}>
@@ -329,7 +329,7 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                         title={t('player_payments.total_paid', { defaultValue: 'Total Paid' })}
                         value={totals.paid}
                         valueStyle={{ color: '#52c41a' }}
-                        formatter={(value) => formatCurrency(Number(value), displayCurrency)}
+                        formatter={(value) => formatCurrency(Number(value), displayCurrency, true)}
                     />
                 </Col>
                 <Col xs={24} sm={8}>
@@ -337,7 +337,7 @@ const PlayerPaymentsSection: FC<PlayerPaymentsSectionProps> = ({ playerId }) => 
                         title={t('player_payments.total_remaining', { defaultValue: 'Total Remaining' })}
                         value={totals.remaining}
                         valueStyle={{ color: totals.remaining > 0 ? '#ff4d4f' : '#52c41a' }}
-                        formatter={(value) => formatCurrency(Number(value), displayCurrency)}
+                        formatter={(value) => formatCurrency(Number(value), displayCurrency, true)}
                     />
                 </Col>
             </Row>
